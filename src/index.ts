@@ -6,7 +6,7 @@ export class MongoDataAPI {
 
     private _mongoAPIManager: IDataAPI;
 
-    public readonly API_VERSION: string = "2.8.2";
+    public readonly API_VERSION: string = "2.8.3";
 
     constructor() {
         this._mongoAPIManager = new MongoAPIManager();

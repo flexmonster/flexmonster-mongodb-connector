@@ -6,6 +6,7 @@ import {IApiRequest} from "../requests/apiRequests/IApiRequest";
 import {RequestsRegister} from "../requests/register/RequestsRegister";
 import {RequestKey} from "../requests/register/RequestKey"
 import { Db } from "mongodb";
+import { APISchema } from "../schema/APISchema";
 
 export class RequestHandler {
 
@@ -19,10 +20,10 @@ export class RequestHandler {
         this._requestsRegister = RequestsRegister.getInstance();
     }
 
-    public async loadData(dbo: Db, apiRequest: IApiRequest, currentPage: PagingInterface) {
+    public async loadData(dbo: Db, schema: APISchema, apiRequest: IApiRequest, currentPage: PagingInterface) {
         this._queryExecutor.injectDBConnection(dbo);
 
-        const data: any = await apiRequest.getData(this._queryBuilder, this._queryExecutor);
+        const data: any = await apiRequest.getData(schema, this._queryBuilder, this._queryExecutor);
         
         let nextPageToken: string = null;
         if (this.getDataLength(data) >= 0 && !apiRequest.isFinished()) {

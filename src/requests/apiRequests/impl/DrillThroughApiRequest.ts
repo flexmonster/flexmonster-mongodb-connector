@@ -3,6 +3,7 @@ import {MongoQueryExecutor} from "../../../query/MongoQueryExecutor";
 import {IRequestArgument} from "../IRequestArgument";
 import {MongoResponseParser} from "../../../parsers/MongoResponseParser";
 import { AbstractApiRequest } from "./AbstractApiRequest";
+import { APISchema } from "../../../schema/APISchema";
 
 export class DrillThroughApiRequest extends AbstractApiRequest {
 
@@ -14,13 +15,13 @@ export class DrillThroughApiRequest extends AbstractApiRequest {
         this._clientSideLimitation = requestArgument.query["limit"] != null ? requestArgument.query["limit"] : 0;
     }
 
-    public async getData(queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
+    public async getData(schema: APISchema, queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
 
         let data: any[] = [];
 
         if ((this._currentPageIndex < this._clientSideLimitation && this._clientSideLimitation > 0) || this._clientSideLimitation <= 0) {
 
-            const mongoQuery: any = this.buildMongoQuery(queryBuilder);
+            const mongoQuery: any = this.buildMongoQuery(queryBuilder, schema);
 
             const queryResultCursor: Promise<any> = this.executeQuery(queryExecutor, mongoQuery);
 
@@ -30,10 +31,10 @@ export class DrillThroughApiRequest extends AbstractApiRequest {
         return data;
     }
     
-    buildMongoQuery(queryBuilder: QueryBuilder) {
+    buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema) {
         if (queryBuilder == null) throw new Error("Illegal argument exception");
 
-        const mongoQuery: any = queryBuilder.buildDrillThroughPipeline(this._splitedQueries[this._curentQueryIndex]);
+        const mongoQuery: any = queryBuilder.buildDrillThroughPipeline(this._splitedQueries[this._curentQueryIndex], schema);
         const limit: number = this.getQueryLimit();
         queryBuilder.applyPaging(mongoQuery, {skipNumber: this._currentPageIndex, limitNumber: limit});
         this._currentPageIndex += limit;

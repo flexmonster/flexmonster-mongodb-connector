@@ -1,6 +1,7 @@
 import {ClientSideFieldType} from '../../utils/consts/ClientSideFieldType';
 import {DateParts, DateIntervals} from '../../utils/consts/DateParts';
 import { IRequestField } from '../../requests/apiRequests/IRequestArgument';
+import { APISchema } from '../../schema/APISchema';
 
 export class ProjectionQueryBuilder {
 
@@ -8,7 +9,7 @@ export class ProjectionQueryBuilder {
 
     }
 
-    public buildProjectionStage(query: any, field?: IRequestField) {
+    public buildProjectionStage(query: any, schema: APISchema) {
         let aggregationQuery = query["aggs"];
         let filterQuery = query["filter"];
         let projection: any = {};
@@ -16,7 +17,7 @@ export class ProjectionQueryBuilder {
             let fieldValueObject: IRequestField = null;
             for (let i = 0; i < aggregationQuery["values"].length; i++) {
                 fieldValueObject = aggregationQuery["values"][i]["field"];
-                if (fieldValueObject.type == ClientSideFieldType.DATE) {
+                if (schema.fields.get(fieldValueObject.uniqueName).type == ClientSideFieldType.DATE) {
                     this._buildProjectionForDateField(fieldValueObject, projection);
                 } else {
                     projection[fieldValueObject.uniqueName] = "$" + fieldValueObject.uniqueName;
@@ -24,19 +25,19 @@ export class ProjectionQueryBuilder {
             }
         }
         if (aggregationQuery["by"]) {
-            this._buildProjectionFromRowsColumns(aggregationQuery["by"]["rows"], projection);
-            this._buildProjectionFromRowsColumns(aggregationQuery["by"]["cols"], projection);
+            this._buildProjectionFromRowsColumns(aggregationQuery["by"]["rows"], schema, projection);
+            this._buildProjectionFromRowsColumns(aggregationQuery["by"]["cols"], schema, projection);
         }
-        this._buildProjectionFromFilters(filterQuery, projection);
+        this._buildProjectionFromFilters(filterQuery, schema, projection);
         return projection;
     }
 
-    private _buildProjectionFromFilters(filters: any, projectionQuery: any) {
+    private _buildProjectionFromFilters(filters: any, schema: APISchema, projectionQuery: any) {
         if (filters == null) return;
         let filterObject: any | IRequestField = null;
         for (let i = 0; i < filters.length; i++) {
             filterObject = filters[i].field;
-            if (filterObject.type == ClientSideFieldType.DATE) {
+            if (schema.fields.get(filterObject.uniqueName).type == ClientSideFieldType.DATE) {
                 this._buildProjectionForDateField(filterObject, projectionQuery);
             } else {
                 projectionQuery[filterObject.uniqueName] = "$" + filterObject.uniqueName;
@@ -49,14 +50,14 @@ export class ProjectionQueryBuilder {
         }
     }
 
-    private _buildProjectionFromRowsColumns(rowsColumns: any, projectionQuery: any) {
+    private _buildProjectionFromRowsColumns(rowsColumns: any, schema: APISchema, projectionQuery: any) {
         if (rowsColumns == null) return;
         let fieldReference = null;
         let fieldObject: IRequestField = null;
         for (let i = 0; i < rowsColumns.length; i++) {
             fieldObject = rowsColumns[i]
             fieldReference = "$" + fieldObject.uniqueName;
-            if (fieldObject.type == ClientSideFieldType.DATE) {
+            if (schema.fields.get(fieldObject.uniqueName).type == ClientSideFieldType.DATE) {
                 this._buildProjectionForDateField(rowsColumns[i], projectionQuery);
             } else {
                 projectionQuery[fieldObject.uniqueName] = fieldReference;
@@ -65,9 +66,11 @@ export class ProjectionQueryBuilder {
     }
 
     private _buildProjectionForDateField(fieldValueObject: IRequestField, projectionQuery: any) {
-        let timestampObject: any = {};
         const fieldUniquename: string = fieldValueObject.uniqueName;
-        if (fieldValueObject.interval == null) {
+        if (projectionQuery[fieldUniquename] != null) return;
+
+        let timestampObject: any = {};
+        if (fieldValueObject.interval == null && !DateIntervals.isValid(fieldValueObject.interval)) {
             projectionQuery[fieldUniquename] = {"$toLong": "$" + fieldUniquename};
             return;
         } else {
@@ -90,7 +93,6 @@ export class ProjectionQueryBuilder {
         projectionQuery[fieldUniquename] = {"$toLong": {
             "$dateFromParts": timestampObject
         }};
-
     }
 
 }

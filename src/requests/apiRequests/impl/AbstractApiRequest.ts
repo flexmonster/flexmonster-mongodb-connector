@@ -2,6 +2,7 @@ import {IApiRequest} from "../IApiRequest";
 import {IRequestArgument} from "../IRequestArgument";
 import {QueryBuilder} from "../../../query/builder/QueryBuilder";
 import { MongoQueryExecutor } from "../../../query/MongoQueryExecutor";
+import { APISchema } from "../../../schema/APISchema";
 
 export abstract class AbstractApiRequest implements IApiRequest{
 
@@ -22,8 +23,8 @@ export abstract class AbstractApiRequest implements IApiRequest{
         return this._requestArgument;
     };
     
-    public async getData(queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
-        const mongoQuery: any = this.buildMongoQuery(queryBuilder);
+    public async getData(schema: APISchema, queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
+        const mongoQuery: any = this.buildMongoQuery(queryBuilder, schema);
 
         const queryResultCursor: Promise<any> = this.executeQuery(queryExecutor, mongoQuery);
 
@@ -56,7 +57,7 @@ export abstract class AbstractApiRequest implements IApiRequest{
 
     abstract toJSON(response: any, nextpageToken?: string): any;
 
-    protected abstract buildMongoQuery(queryBuilder: QueryBuilder): any;
+    protected abstract buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema): any;
     protected abstract parseQueryResult(queryResultCursor: Promise<any>): Promise<any>;
 
 }

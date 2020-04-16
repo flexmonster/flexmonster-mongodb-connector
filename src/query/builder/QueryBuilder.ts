@@ -3,6 +3,7 @@ import {ProjectionQueryBuilder} from './ProjectionQueryBuilder';
 import {GroupingQueryBuilder} from './GroupingQueryBuilder';
 import {IRequestField} from '../../requests/apiRequests/IRequestArgument';
 import { MongoPipelineStages } from '../../utils/consts/MongoPipelineStages';
+import { APISchema } from '../../schema/APISchema';
 
 export class QueryBuilder {
 
@@ -28,7 +29,7 @@ export class QueryBuilder {
         return this._queryBuilderInstance;
     }
 
-    public buildDrillThroughPipeline(drillThroughQuery: any) {
+    public buildDrillThroughPipeline(drillThroughQuery: any, schema: APISchema) {
         if (drillThroughQuery == null) throw new Error("Illegal argument exception. Query cannot be null");
 
         const pipeline: any[] = [];
@@ -43,33 +44,33 @@ export class QueryBuilder {
         };
 
         pipeline.push({
-            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(extendedQuery)
+            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(extendedQuery, schema)
         });
 
         if (extendedQuery["filter"] != null) {
             pipeline.push({
-                [MongoPipelineStages.MATCH]: this._filterQueryBuilder.buildFilterQuery(extendedQuery["filter"])
+                [MongoPipelineStages.MATCH]: this._filterQueryBuilder.buildFilterQuery(extendedQuery["filter"], schema)
             });
         }
 
         delete extendedQuery["filter"];
         pipeline.push({
-            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(extendedQuery)
+            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(extendedQuery, schema)
         });
 
         return pipeline;
     }
 
-    public buildAggregationPipeline(query: any) {
+    public buildAggregationPipeline(query: any, schema: APISchema) {
         if (query == null) throw new Error("Illegal argument exception. Query cannot be null");
         const pipeline: any[] = [];
 
         pipeline.push({
-            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(query)
+            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(query, schema)
         });
         if (query["filter"] != null) {
             pipeline.push({
-                "$match": this._filterQueryBuilder.buildFilterQuery(query["filter"])
+                "$match": this._filterQueryBuilder.buildFilterQuery(query["filter"], schema)
             });
         }
 
@@ -77,17 +78,16 @@ export class QueryBuilder {
         delete queryCopy["filter"]; //query with no filter;
 
         pipeline.push({
-            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(queryCopy)
+            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(queryCopy, schema)
         });
 
         if (query["aggs"] != null) {
             pipeline.push(this._groupingQueryBuilder.buildGroupStage(query["aggs"]));
         }
-
         return pipeline;
     }
 
-    public buildMembersPipeline(field: IRequestField): any[] {
+    public buildMembersPipeline(field: IRequestField, schema: APISchema): any[] {
         let query = {
             "aggs": {
                 "by": {
@@ -99,7 +99,7 @@ export class QueryBuilder {
         let pipeline: any[] = [];
 
         pipeline.push({
-            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(query)
+            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(query, schema)
         });
         pipeline.push(this._groupingQueryBuilder.buildGroupStage(query["aggs"]));
 

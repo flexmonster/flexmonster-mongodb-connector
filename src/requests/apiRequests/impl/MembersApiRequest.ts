@@ -2,6 +2,7 @@ import {IRequestArgument} from "../IRequestArgument";
 import {QueryBuilder} from "../../../query/builder/QueryBuilder";
 import {MongoResponseParser} from "../../../parsers/MongoResponseParser";
 import { AbstractApiRequest } from "./AbstractApiRequest";
+import { APISchema } from "../../../schema/APISchema";
 
 export class MembersApiRequest extends AbstractApiRequest {
 
@@ -9,8 +10,8 @@ export class MembersApiRequest extends AbstractApiRequest {
         super(requestArgument);
     }
 
-    protected buildMongoQuery(queryBuilder: QueryBuilder): any {
-        const mongoQuery: any = queryBuilder.buildMembersPipeline(this.requestArgument.fieldObject);
+    protected buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema): any {
+        const mongoQuery: any = queryBuilder.buildMembersPipeline(this.requestArgument.fieldObject, schema);
         queryBuilder.applyPaging(mongoQuery, {skipNumber: this._currentPageIndex, limitNumber: this.CHUNK_SIZE});
         this._currentPageIndex += this.CHUNK_SIZE;
         return mongoQuery;

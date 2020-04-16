@@ -2,6 +2,7 @@ import {IRequestArgument} from "../IRequestArgument";
 import {QueryBuilder} from "../../../query/builder/QueryBuilder";
 import {MongoResponseParser} from "../../../parsers/MongoResponseParser";
 import { AbstractApiRequest } from "./AbstractApiRequest";
+import { APISchema } from "../../../schema/APISchema";
 
 export class AggregationApiRequest extends AbstractApiRequest {
 
@@ -9,9 +10,9 @@ export class AggregationApiRequest extends AbstractApiRequest {
         super(requestArgument);
     }
 
-    public buildMongoQuery(queryBuilder: QueryBuilder) {
+    public buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema) {
         if (queryBuilder == null) throw new Error("Illegal argument exception");
-        const mongoQuery: any = queryBuilder.buildAggregationPipeline(this._splitedQueries[this._curentQueryIndex]); //TODO: rename "buildPipeline"
+        const mongoQuery: any = queryBuilder.buildAggregationPipeline(this._splitedQueries[this._curentQueryIndex], schema); //TODO: rename "buildPipeline"
         queryBuilder.applyPaging(mongoQuery, {skipNumber: this._currentPageIndex, limitNumber: this.CHUNK_SIZE});
         this._currentPageIndex += this.CHUNK_SIZE;
         return mongoQuery;

@@ -18,6 +18,7 @@ export class MongoAPIManager implements IDataAPI{
     private _queryBuilder: QueryBuilder;
     private _dataLoader: RequestHandler;
     private _mongoResultParser: MongoResponseParser;
+    private _schemaCache: {[index: string]: APISchema};
     
     constructor() {
         this._mongoQueryManager = new MongoQueryExecutor();
@@ -25,6 +26,7 @@ export class MongoAPIManager implements IDataAPI{
         this._mongoResultParser = new MongoResponseParser();
         this._queryBuilder = QueryBuilder.getInstance();
         this._dataLoader = new RequestHandler(this._queryBuilder, this._mongoQueryManager, this._mongoResultParser);
+        this._schemaCache = {};
     }
 
     /**
@@ -34,11 +36,13 @@ export class MongoAPIManager implements IDataAPI{
      * @return {object} returns schema object
      */
     public async getSchema(dbo: Db, index: string): Promise<APISchema> {
+        if (typeof index != 'string') throw new Error("Incorrect index format");
         this._mongoQueryManager.injectDBConnection(dbo);
-        let document: any = await this._mongoQueryManager.runShemaQuery(index);
-        this._mongoResponseParser.parseShemaFromDocument(document);
-
-        return this._mongoResponseParser.parseShemaFromDocument(document).toJSON();
+        if (this._schemaCache[index] == null) {
+            let document: any = await this._mongoQueryManager.runShemaQuery(index);
+            this._schemaCache[index] = this._mongoResponseParser.parseShemaFromDocument(document);
+        }
+        return this._schemaCache[index].toJSON();
     }
 
     /**
@@ -53,7 +57,7 @@ export class MongoAPIManager implements IDataAPI{
         let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
             ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
             : new MembersApiRequest({index: index, fieldObject: fieldObject})
-        return this._dataLoader.loadData(dbo, apiRequest, pagingObject);
+        return this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
     }
 
     /**
@@ -64,7 +68,7 @@ export class MongoAPIManager implements IDataAPI{
      * @param {number} page
      * @return {object}
      */
-    async getSelectResult(dbo: Db, index: CollectionName, query: any, pagingObject: PagingInterface) {
+    public async getSelectResult(dbo: Db, index: CollectionName, query: any, pagingObject: PagingInterface) {
 
         let response = null;
 
@@ -73,22 +77,26 @@ export class MongoAPIManager implements IDataAPI{
             let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
                 : new AggregationApiRequest({index: index, query: query});
-            response = this._dataLoader.loadData(dbo, apiRequest, pagingObject);
+            response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
 
         } else if (query["aggs"] == null && query["fields"] != null) {//drill-through
 
             let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
                 : new DrillThroughApiRequest({index: index, query: query})
-            response = this._dataLoader.loadData(dbo, apiRequest, pagingObject);
+            response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
         } else if (query["aggs"] != null && query["fields"] != null) {// flat-form
 
             let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
                 : new FlatApiRequest({index: index, query: query})
-            response = this._dataLoader.loadData(dbo, apiRequest, pagingObject);
+            response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
         }
 
         return response;
+    }
+
+    private getIndexSchema(index: string): APISchema {
+        return this._schemaCache[index];
     }
 }

@@ -2,6 +2,7 @@ import {IRequestArgument} from "../IRequestArgument";
 import {QueryBuilder} from "../../../query/builder/QueryBuilder";
 import {MongoResponseParser} from "../../../parsers/MongoResponseParser";
 import { AbstractApiRequest } from "./AbstractApiRequest";
+import { APISchema } from "../../../schema/APISchema";
 
 export class FlatApiRequest extends AbstractApiRequest {
 
@@ -9,14 +10,14 @@ export class FlatApiRequest extends AbstractApiRequest {
         super(requestArgument);
     }    
     
-    protected buildMongoQuery(queryBuilder: QueryBuilder) {
+    protected buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema) {
         if (queryBuilder == null) throw new Error("Illegal argument exception");
 
         let mongoQuery: any = null;
         if (this._splitedQueries[this._curentQueryIndex]["fields"] != null) {
-            mongoQuery = queryBuilder.buildDrillThroughPipeline(this._splitedQueries[this._curentQueryIndex]);
+            mongoQuery = queryBuilder.buildDrillThroughPipeline(this._splitedQueries[this._curentQueryIndex], schema);
         } else {
-            mongoQuery = queryBuilder.buildAggregationPipeline(this._splitedQueries[this._curentQueryIndex]);
+            mongoQuery = queryBuilder.buildAggregationPipeline(this._splitedQueries[this._curentQueryIndex], schema);
         }
         queryBuilder.applyPaging(mongoQuery, {skipNumber: this._currentPageIndex, limitNumber: this.CHUNK_SIZE});
         this._currentPageIndex += this.CHUNK_SIZE;
@@ -47,7 +48,8 @@ export class FlatApiRequest extends AbstractApiRequest {
     }
 
     private _splitGrandTotalQuery(query: any, aggregationQueries: any[]): void {
-        if (query["aggs"] == null) return;
+        if (query["aggs"] == null || query["aggs"]["values"] == null 
+            || query["aggs"]["values"].length == 0) return;
 
         const grandTotalQuery: any = JSON.parse(JSON.stringify(query));
         delete grandTotalQuery["fields"];

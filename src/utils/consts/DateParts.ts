@@ -17,4 +17,8 @@ export class DateIntervals {
     public static MINUTES: string = "m";
     public static SECONDS: string = "s";
     
+    public static isValid(interval: string): boolean {
+        return DateIntervals.DAY == interval || DateIntervals.HOUR == interval 
+            || DateIntervals.MINUTES == interval || DateIntervals.SECONDS == interval;
+    }
 }

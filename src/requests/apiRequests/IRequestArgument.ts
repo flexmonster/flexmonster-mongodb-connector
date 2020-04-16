@@ -9,6 +9,5 @@ export interface IRequestArgument {
 
 export interface IRequestField {
     uniqueName: string,
-    type: string,
     interval?: string
 }

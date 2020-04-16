@@ -114,11 +114,11 @@ export class MongoResponseParser {
             document = data;
             result["hits"].push(this.parseDrillThroughHit(document, fields));
         });
-        result["fields"] = this.parseDrillThroughFields(document, fields);
+        result["fields"] = this.parseDrillThroughFields(fields);
         return result;
     }
 
-    private parseDrillThroughFields(document: any, fieldsFromQuery: IRequestField[]): any[] {
+    private parseDrillThroughFields(fieldsFromQuery: IRequestField[]): any[] {
         const fields: any[] = [];
         for (let i = 0; i < fieldsFromQuery.length; i++) {
             fields.push({

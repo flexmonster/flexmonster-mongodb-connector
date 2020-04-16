@@ -2,27 +2,29 @@ import {ClientSideFieldType} from '../../utils/consts/ClientSideFieldType';
 import {ClientSideFilterQueries} from '../../utils/consts/ClientSideFilterQueries';
 import {MongoQueries} from '../../utils/consts/MongoQueries';
 import {IRequestField} from '../../requests/apiRequests/IRequestArgument';
+import { APISchema } from '../../schema/APISchema';
 
 export class FilterQueryBuilder {
     
     constructor() {}
 
-    public buildFilterQuery(query: any) {
+    public buildFilterQuery(query: any, schema: APISchema) {
         let filterQuery = {};
         for (let i = 0; i < query.length; i++) {
-            this._filterField(query[i], filterQuery);
+            this._filterField(query[i], schema, filterQuery);
         }
         return filterQuery;
     }
 
-    private _filterField(query: any, filterQuery: any) {
+    private _filterField(query: any, schema: APISchema, filterQuery: any) {
         let field: IRequestField = query["field"];
-        if ((field.type == ClientSideFieldType.STRING || field.type == ClientSideFieldType.NUMBER) 
+        if ((schema.fields.get(field.uniqueName).type == ClientSideFieldType.STRING 
+            || schema.fields.get(field.uniqueName).type == ClientSideFieldType.NUMBER) 
             && query.value == null) {
 
             this._filterLabelField(query, field, filterQuery);
 
-        } else if (field.type == ClientSideFieldType.DATE 
+        } else if (schema.fields.get(field.uniqueName).type == ClientSideFieldType.DATE 
             && query.value == null) {
 
             this._filterDateField(query, field, filterQuery);
@@ -74,17 +76,27 @@ export class FilterQueryBuilder {
             }
         } else {
             if (query[ClientSideFilterQueries.INCLUDE]) {
-                fieldFilterObject[MongoQueries.INCLUDE] = query[ClientSideFilterQueries.INCLUDE];
+                fieldFilterObject[MongoQueries.INCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.INCLUDE]);
             } else if (query[ClientSideFilterQueries.EXCLUDE]) {
-                fieldFilterObject[MongoQueries.EXCLUDE] = query[ClientSideFilterQueries.EXCLUDE];
+                fieldFilterObject[MongoQueries.EXCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.EXCLUDE]);
             }
         }
 
         filterQueryResult[fieldName.uniqueName] = fieldFilterObject;
     }
 
+    private parseIncludeExcludeMembers(members: IFilterMemberObject[]): (string | number)[] {
+        if (members == null) return [];
+        const membersList: (string | number)[] = [];
+        for (let i = 0; i < members.length; i++) {
+            membersList.push(members[i].member);
+        }
+        return membersList;
+    }
+
     private _msDay: number = 24 * 60 * 60 * 1000;
     private _filterDateField(query: any, fieldName: IRequestField, dateFieldFilterQuery: any) {
+
         const mongoFilterQuery: any = {};
         const dateFieldFilterUniquName = fieldName;
         
@@ -118,13 +130,17 @@ export class FilterQueryBuilder {
             }
         } else {
             if (query[ClientSideFilterQueries.INCLUDE]) {
-                mongoFilterQuery[MongoQueries.INCLUDE] = query[ClientSideFilterQueries.INCLUDE];
+                mongoFilterQuery[MongoQueries.INCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.INCLUDE]);
             } else if (query[ClientSideFilterQueries.EXCLUDE]) {
-                mongoFilterQuery[MongoQueries.EXCLUDE] = query[ClientSideFilterQueries.EXCLUDE];
+                mongoFilterQuery[MongoQueries.EXCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.EXCLUDE]);
             }
         }
 
         dateFieldFilterQuery[dateFieldFilterUniquName.uniqueName] = mongoFilterQuery;
     }
 
+}
+
+export interface IFilterMemberObject {
+    member: string | number;
 }

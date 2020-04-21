@@ -57,7 +57,7 @@ On the front end, your code should look like the following to get the data from 
                 dataSource: {
                     type: "api",
                     url: "url to your API endpoins",
-	              index: “your collection’s name”
+	            index: “your collection’s name”
                 }
             }
         })

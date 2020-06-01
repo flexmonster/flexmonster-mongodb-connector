@@ -103,7 +103,7 @@ Available methods for the Flexmonster MongoDB Connector:
     | Parameter | <div style="width:85px">Type</div> | Description |
     | ------ | ---------- | -----|
     | `mongoDBInstance` | [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html) | The instance of the needed MongoDB database. |
-    | `index` | String | The collection’s name. `index` is sent in the body of the Flexmonster request. |
+    | `index` | String&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | The collection’s name. `index` is sent in the body of the Flexmonster request. |
     | `fieldObject` | Field Object | Represents a field with its properties. `fieldObject` is sent in the body of the Flexmonster request. |
     | `page` | Object | Has the `pageNumber` and `pageToken` properties. | 
 

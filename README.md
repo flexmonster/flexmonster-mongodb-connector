@@ -100,7 +100,7 @@ Available methods for the Flexmonster MongoDB Connector:
 
    The `getMembers` method has the following parameters:
 
-    | Parameter | <div style="width:85px">Type</div> | Description |
+    | Parameter | <div style="width:90px">Type</div> | Description |
     | ------ | ---------- | -----|
     | `mongoDBInstance` | [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html) | The instance of the needed MongoDB database. |
     | `index` | String | The collection’s name. `index` is sent in the body of the Flexmonster request. |

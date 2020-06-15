@@ -10,7 +10,7 @@ The Flexmonster MongoDB Connector is a special server-side tool intended to help
 - [Getting started](#getting-started)
 - [Examples](#examples)
 - [Usage](#usage)
-  - [getSchema](#getschema)
+  - [getSchema](#getSchema)
   - [getMembers](#getMembers)
   - [getSelectResult](#getSelectResult)
 - [License](#license)
@@ -73,7 +73,7 @@ The sample project can be found [at GitHub](https://github.com/flexmonster/pivot
 
 Available methods for the Flexmonster MongoDB Connector:
 
-1. ### getSchema
+1. getSchema  <a id="getSchema"></a>
 
    Allows getting the list of all fields with their types from a MongoDB database.
 
@@ -81,16 +81,18 @@ Available methods for the Flexmonster MongoDB Connector:
 
    The `getSchema` method has the following parameters:
 
-   - `mongoDBInstance` – [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html). The instance of the needed MongoDB database.
-   - `index` – String. The collection’s name. `index` is sent in the body of the Flexmonster request.
-
+    | Parameter | Type | Description |
+    | ------ | ----------- | -----|
+    | `mongoDBInstance` | [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html) | The instance of the needed MongoDB database. |
+    | `index` | String | The collection’s name. `index` is sent in the body of the Flexmonster request. |
+  
    **Returns**
 
    Array of field objects, which contains all the fields and information about them.
 
    See [our documentation](https://www.flexmonster.com/api/getschema/) to learn more about the `getSchema` method. 
 
-2. ### getMembers
+2. getMembers <a id="getMembers"></a>
 
    Allows getting all members of the field from a MongoDB database.
 
@@ -98,10 +100,12 @@ Available methods for the Flexmonster MongoDB Connector:
 
    The `getMembers` method has the following parameters:
 
-   - `mongoDBInstance` – [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html). The instance of the needed MongoDB database.
-   - `index` – String. The collection’s name. `index` is sent in the body of the Flexmonster request.
-   - `fieldObject` – Field Object. Represents a field with its properties. `fieldObject` is sent in the body of the Flexmonster request.
-   - `page` – Object. Has the `pageNumber` and `pageToken` properties.
+    | Parameter | Type | Description |
+    | ------ | ---------- | -----|
+    | `mongoDBInstance` | [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html) | The instance of the needed MongoDB database. |
+    | `index` | String&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | The collection’s name. `index` is sent in the body of the Flexmonster request. |
+    | `fieldObject` | Field Object | Represents a field with its properties. `fieldObject` is sent in the body of the Flexmonster request. |
+    | `page` | Object | Has the `pageNumber` and `pageToken` properties. | 
 
    **Returns**
 
@@ -109,17 +113,20 @@ Available methods for the Flexmonster MongoDB Connector:
 
    See [our documentation](https://www.flexmonster.com/api/getmembers-2/) to learn more about the `getMembers` method. 
 
-3. ### getSelectResult
+3. getSelectResult <a id="getSelectResult"></a>
 
    Allows getting the data from a MongoDB database.
 
    **Parameters**
 
    The `getSelectResult` method has the following parameters:
-   - `mongoDBInstance` – [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html). The instance of the needed MongoDB database.
-   - `index` – String. The collection’s name. `index` is sent in the body of the Flexmonster request.
-   - `query` – Object. `query` is sent in the body of the Flexmonster request.
-   - `page` – Object. Has the `pageNumber` and `pageToken` properties.
+
+    | Parameter | Type | Description |
+    | ------ | ---------- | -----|
+    | `mongoDBInstance` | [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html) | The instance of the needed MongoDB database. |
+    | `index` | String | The collection’s name. `index` is sent in the body of the Flexmonster request. |
+    | `query` | Object | `query` is sent in the body of the Flexmonster request. |
+    | `page` | Object | Has the `pageNumber` and `pageToken` properties. | 
 
    **Returns**
   

@@ -70,7 +70,7 @@ export class ProjectionQueryBuilder {
         if (projectionQuery[fieldUniquename] != null) return;
 
         let timestampObject: any = {};
-        if (fieldValueObject.interval == null && !DateIntervals.isValid(fieldValueObject.interval)) {
+        if (fieldValueObject.interval == null || !DateIntervals.isValid(fieldValueObject.interval)) {
             projectionQuery[fieldUniquename] = {"$toLong": "$" + fieldUniquename};
             return;
         } else {

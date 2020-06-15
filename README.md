@@ -81,10 +81,8 @@ Available methods for the Flexmonster MongoDB Connector:
 
    The `getSchema` method has the following parameters:
 
-    | Parameter | Type | Description |
-    | ------ | ----------- | -----|
-    | `mongoDBInstance` | [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html) | The instance of the needed MongoDB database. |
-    | `index` | String | The collection’s name. `index` is sent in the body of the Flexmonster request. |
+    - mongoDBInstance - Db instance. The instance of the needed MongoDB database.
+    - index - String. The collection’s name. index is sent in the body of the Flexmonster request.
   
    **Returns**
 
@@ -100,12 +98,10 @@ Available methods for the Flexmonster MongoDB Connector:
 
    The `getMembers` method has the following parameters:
 
-    | Parameter | Type | Description |
-    | ------ | ---------- | -----|
-    | `mongoDBInstance` | [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html) | The instance of the needed MongoDB database. |
-    | `index` | String&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | The collection’s name. `index` is sent in the body of the Flexmonster request. |
-    | `fieldObject` | Field Object | Represents a field with its properties. `fieldObject` is sent in the body of the Flexmonster request. |
-    | `page` | Object | Has the `pageNumber` and `pageToken` properties. | 
+    - mongoDBInstance - Db instance. The instance of the needed MongoDB database.
+    - index - String. The collection’s name. index is sent in the body of the Flexmonster request.
+    - fieldObject - Field Object. Represents a field with its properties. fieldObject is sent in the body of the Flexmonster request.
+    - page - Object. Has the pageNumber and pageToken properties. 
 
    **Returns**
 
@@ -121,12 +117,10 @@ Available methods for the Flexmonster MongoDB Connector:
 
    The `getSelectResult` method has the following parameters:
 
-    | Parameter | Type | Description |
-    | ------ | ---------- | -----|
-    | `mongoDBInstance` | [Db instance](https://mongodb.github.io/node-mongodb-native/api-generated/db.html) | The instance of the needed MongoDB database. |
-    | `index` | String | The collection’s name. `index` is sent in the body of the Flexmonster request. |
-    | `query` | Object | `query` is sent in the body of the Flexmonster request. |
-    | `page` | Object | Has the `pageNumber` and `pageToken` properties. | 
+    - mongoDBInstance - Db instance. The instance of the needed MongoDB database.
+    - index - String. The collection’s name. index is sent in the body of the Flexmonster request.
+    - query - Object. query is sent in the body of the Flexmonster request.
+    - page - Object. Has the pageNumber and pageToken properties. 
 
    **Returns**
   

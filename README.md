@@ -21,7 +21,7 @@ The Flexmonster MongoDB Connector is a special server-side tool intended to help
 Start by installing the Flexmonster MongoDB Connector as a node module and save it as a dependency in your `package.json`:
 
 ```bash
-npm instal flexmonster-mongo-connector
+npm install flexmonster-mongo-connector
 ```
 
 Then embed the Connector into your server, set up a connection with your MongoDB database, and define the Connector. Here is an example:

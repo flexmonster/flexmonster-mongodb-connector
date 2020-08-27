@@ -2,7 +2,7 @@ export interface IRequestArgument {
 
     index: string;
     fieldObject?: IRequestField;
-    query?: any;
+    clientQuery?: any;
     //page?: number;
 
 }

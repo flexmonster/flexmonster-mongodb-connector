@@ -12,7 +12,7 @@ export class DrillThroughApiRequest extends AbstractApiRequest {
     constructor(requestArgument: IRequestArgument) {
         super(requestArgument);
 
-        this._clientSideLimitation = requestArgument.query["limit"] != null ? requestArgument.query["limit"] : 0;
+        this._clientSideLimitation = requestArgument.clientQuery["limit"] != null ? requestArgument.clientQuery["limit"] : 0;
     }
 
     public async getData(schema: APISchema, queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {

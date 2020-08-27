@@ -11,8 +11,10 @@ export class SchemaBuilder {
     private static _instance: SchemaBuilder;
 
     constructor() {
-        if (SchemaBuilder._instance != null) throw new Error("Instantiation failed: "+
+        if (SchemaBuilder._instance != null) throw new Error("Initialization failed: "+
         "use Singleton.getInstance() instead of new.");
+
+        SchemaBuilder._instance = this;
     }
 
     public static getInstance(): SchemaBuilder {

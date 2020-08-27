@@ -1,6 +1,5 @@
 import {IRegister} from './IRegister';
 import { IApiRequest } from '../apiRequests/IApiRequest';
-import { IKeyRegister } from './IKeyRegister';
 
 type Request = RequestsRegisterElement<IApiRequest>;
 
@@ -14,11 +13,12 @@ export class RequestsRegister implements IRegister<string, IApiRequest> {
     private readonly _startingCapacity = 500;
     
     constructor() {
-        if (RequestsRegister._requestRegisterInstance != null) throw new Error("Instantiation failed: "+
+        if (RequestsRegister._requestRegisterInstance != null) throw new Error("Initialization failed: "+
         "use Singleton.getInstance() instead of new.");
 
         this._storage = new Map();
         this._capacity = this._startingCapacity;
+        RequestsRegister._requestRegisterInstance = this;
     }
 
     public static getInstance(): RequestsRegister {

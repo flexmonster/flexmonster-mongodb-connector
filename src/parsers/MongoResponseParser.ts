@@ -4,23 +4,26 @@ import {APISchema} from '../schema/APISchema';
 import {IRequestField} from '../requests/apiRequests/IRequestArgument';
 import {MongoFieldType} from '../utils/consts/MongoFieldType';
 import { Cursor } from 'mongodb';
+import { IQuery } from '../query/IQuery';
 
 export class MongoResponseParser {
 
+    private static _responseParserInstance: MongoResponseParser = null;
+
     constructor() {
-        if (MongoResponseParser._responseParser != null) {
-            throw new Error("Instantiation failed: "+
+        if (MongoResponseParser._responseParserInstance != null) {
+            throw new Error("Initialization failed: "+
                 "use Singleton.getInstance() instead of new.");
         }
+
+        MongoResponseParser._responseParserInstance = this;
     }
 
-    private static _responseParser: MongoResponseParser;
-
     public static getInstance(): MongoResponseParser {
-        if (MongoResponseParser._responseParser == null) {
-            MongoResponseParser._responseParser = new MongoResponseParser();
+        if (MongoResponseParser._responseParserInstance == null) {
+            MongoResponseParser._responseParserInstance = new MongoResponseParser();
         }
-        return MongoResponseParser._responseParser;
+        return MongoResponseParser._responseParserInstance;
     }
 
     public parseShemaFromDocument(document: Promise<any>): APISchema {
@@ -41,29 +44,36 @@ export class MongoResponseParser {
         return storage;
     }
 
-    public parseCalculationsFromCursor(cursor: Promise<any>): Promise<any[]> {
+    public parseCalculationsFromCursor(cursor: Promise<any>, query: IQuery[], startDate: Date = null): Promise<any[]> {
         return new Promise((resolve, reject) => {
             cursor.then((documents: any) => {
-                resolve(this.parseAggregations(documents));
+                resolve(this.parseAggregations(documents, query, startDate));
             });
         });
     }
 
-    private async parseAggregations(documents: Cursor): Promise<any> {
-        let result: any[] = [];
+    private async parseAggregations(documents: Cursor, queries: IQuery[], startDate: Date = null): Promise<any> {
+        let result: Map<string, any> = new Map<string, any>();
         let keys = {};
         let values = {};
+        if (startDate != null) console.log(">>>>>>>query", new Date().getTime() - startDate.getTime());
         await documents.forEach((data: any) => {
-            keys = this.parseDotsFromKeys(data["_id"]);
-            values = this._parseValues(data, {});
-            result.push({
-                "keys": keys,
-                "values": values
-            });
+            //console.log(">>>>>>", data);
+            let queryDefinition: string = null;
+            for (let i = 0; i < queries.length; i++) {
+                queryDefinition = queries[i].definition;
+                for (let j = 0; j < data[queryDefinition].length; j++) {
+                    keys = this.parseDotsFromKeys(data[queryDefinition][j]["_id"]);
+                    values = this._parseValues(data[queryDefinition][j], {});                    
+                    result.set(JSON.stringify(keys), {
+                        "keys": keys,
+                        "values": values
+                    });
+                }
+            }
         });
-        return {
-            "aggs": result
-        };
+        if (startDate != null) console.log(">>>>>>>parse", new Date().getTime() - startDate.getTime());
+        return result;
     }
 
     public parseMembersFromCursor(cursor: Promise<any>, fieldObject: IRequestField): Promise<any[]> {
@@ -90,7 +100,7 @@ export class MongoResponseParser {
                 if (!isGrandTotal) {
                     resolve(this.parseDrillThroughData(documents, fields));
                 } else {
-                    resolve(this.parseAggregations(documents));
+                    //resolve(this.parseAggregations(documents));
                 }
             });
         });

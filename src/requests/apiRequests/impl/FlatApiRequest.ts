@@ -26,7 +26,7 @@ export class FlatApiRequest extends AbstractApiRequest {
 
     protected parseQueryResult(queryResultCursor: Promise<any>): Promise<any> {
         return MongoResponseParser.getInstance().parseFlatFromCursor(queryResultCursor,
-            this.requestArgument.query["fields"], this._splitedQueries[this._curentQueryIndex]["fields"] == null);
+            this.requestArgument.clientQuery["fields"], this._splitedQueries[this._curentQueryIndex]["fields"] == null);
     }
     
     toJSON(response: any, nextpageToken?: string) {

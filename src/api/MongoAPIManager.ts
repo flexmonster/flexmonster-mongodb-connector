@@ -10,22 +10,26 @@ import {MembersApiRequest} from "../requests/apiRequests/impl/MembersApiRequest"
 import { AggregationApiRequest } from '../requests/apiRequests/impl/AggregationApiRequest';
 import { DrillThroughApiRequest } from '../requests/apiRequests/impl/DrillThroughApiRequest';
 import { FlatApiRequest } from '../requests/apiRequests/impl/FlatApiRequest';
+import { DataManager } from '../cache/DataManager';
+import { CacheManager } from '../cache/CacheManager';
 
 export class MongoAPIManager implements IDataAPI{
 
     private _mongoQueryManager: MongoQueryExecutor;
     private _mongoResponseParser: MongoResponseParser;
+    private _cacheManager: CacheManager;
+    private _dataManager: DataManager;
     private _queryBuilder: QueryBuilder;
     private _dataLoader: RequestHandler;
-    private _mongoResultParser: MongoResponseParser;
     private _schemaCache: {[index: string]: APISchema};
     
     constructor() {
         this._mongoQueryManager = new MongoQueryExecutor();
-        this._mongoResponseParser = new MongoResponseParser();
-        this._mongoResultParser = new MongoResponseParser();
+        this._mongoResponseParser = MongoResponseParser.getInstance();
+        this._cacheManager = CacheManager.getInstance();
         this._queryBuilder = QueryBuilder.getInstance();
-        this._dataLoader = new RequestHandler(this._queryBuilder, this._mongoQueryManager, this._mongoResultParser);
+        this._dataManager = new DataManager(this._queryBuilder, this._mongoQueryManager, this._cacheManager);
+        this._dataLoader = new RequestHandler(this._queryBuilder, this._mongoQueryManager, this._dataManager);
         this._schemaCache = {};
     }
 
@@ -76,20 +80,20 @@ export class MongoAPIManager implements IDataAPI{
 
             let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                : new AggregationApiRequest({index: index, query: query});
+                : new AggregationApiRequest({index: index, clientQuery: query});
             response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
 
         } else if (query["aggs"] == null && query["fields"] != null) {//drill-through
 
             let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                : new DrillThroughApiRequest({index: index, query: query})
+                : new DrillThroughApiRequest({index: index, clientQuery: query})
             response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
         } else if (query["aggs"] != null && query["fields"] != null) {// flat-form
 
             let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                : new FlatApiRequest({index: index, query: query})
+                : new FlatApiRequest({index: index, clientQuery: query})
             response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
         }
 

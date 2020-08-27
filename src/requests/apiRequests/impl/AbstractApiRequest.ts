@@ -3,18 +3,19 @@ import {IRequestArgument} from "../IRequestArgument";
 import {QueryBuilder} from "../../../query/builder/QueryBuilder";
 import { MongoQueryExecutor } from "../../../query/MongoQueryExecutor";
 import { APISchema } from "../../../schema/APISchema";
+import { IQuery } from "../../../query/IQuery";
 
 export abstract class AbstractApiRequest implements IApiRequest{
 
     protected readonly _requestArgument: IRequestArgument;
-    protected _splitedQueries: any[];
+    protected _splitedQueries: any[] | IQuery[];
     protected _curentQueryIndex: number;
     protected _currentPageIndex: number;
     protected CHUNK_SIZE: number = 50000;
 
     constructor(requestArgument: IRequestArgument) {
         this._requestArgument = requestArgument;
-        this._splitedQueries = this._splitQuery(this._requestArgument.query);
+        this._splitedQueries = this._splitQuery(this._requestArgument.clientQuery);
         this._curentQueryIndex = 0;
         this._currentPageIndex = 0;
     }
@@ -26,9 +27,10 @@ export abstract class AbstractApiRequest implements IApiRequest{
     public async getData(schema: APISchema, queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
         const mongoQuery: any = this.buildMongoQuery(queryBuilder, schema);
 
+        const startDate = new Date();
         const queryResultCursor: Promise<any> = this.executeQuery(queryExecutor, mongoQuery);
-
-        const data: any[] = await this.parseQueryResult(queryResultCursor);
+        console.log(">>>>>>promise", new Date().getTime() - startDate.getTime());
+        const data: any[] = await this.parseQueryResult(queryResultCursor, startDate);
 
         return data;
     }
@@ -58,6 +60,6 @@ export abstract class AbstractApiRequest implements IApiRequest{
     abstract toJSON(response: any, nextpageToken?: string): any;
 
     protected abstract buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema): any;
-    protected abstract parseQueryResult(queryResultCursor: Promise<any>): Promise<any>;
+    protected abstract parseQueryResult(queryResultCursor: Promise<any>, date?: Date): Promise<any>;
 
 }

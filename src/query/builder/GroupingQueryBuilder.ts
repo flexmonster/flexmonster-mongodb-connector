@@ -2,7 +2,6 @@ import {SupportedAggregations} from '../../utils/consts/SupportedAggregations';
 import {Delimeter} from '../../utils/consts/Delimeters';
 import { MongoPipelineStages } from '../../utils/consts/MongoPipelineStages';
 import {IRequestField} from '../../requests/apiRequests/IRequestArgument';
-import { ClientSideFieldType } from '../../utils/consts/ClientSideFieldType';
 
 export class GroupingQueryBuilder {
 

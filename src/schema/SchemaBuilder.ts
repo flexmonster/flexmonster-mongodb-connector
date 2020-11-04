@@ -38,7 +38,7 @@ export class SchemaBuilder {
             fieldsKey = this._getKeyFromFolder(folder, fieldsCaption);
             if (MongoFieldType.FUNCTION == fieldsType) {
                 continue;
-            } else if (MongoFieldType.STRING == fieldsType || MongoFieldType.BOOLEAN == fieldsType || fieldsCaption == "_id") {
+            } else if (MongoFieldType.STRING == fieldsType || MongoFieldType.BOOLEAN == fieldsType || fieldsCaption == "_id" || element === null) {
                 this._shemaObject.fields.set(fieldsKey, this._createSchemaObject(fieldsKey, fieldsCaption, ClientSideFieldType.STRING, folder));
             } else if (MongoFieldType.NUMBER == fieldsType) {
                 this._shemaObject.fields.set(fieldsKey, this._createSchemaObject(fieldsKey, fieldsCaption, ClientSideFieldType.NUMBER, folder));

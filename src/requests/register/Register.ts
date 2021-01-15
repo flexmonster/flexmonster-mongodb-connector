@@ -1,34 +1,32 @@
 import {IRegister} from './IRegister';
-import { IApiRequest } from '../apiRequests/IApiRequest';
+//import { Verify } from 'crypto';
 
-type Request = RequestsRegisterElement<IApiRequest>;
-
-export class RequestsRegister implements IRegister<string, IApiRequest> {    
+export class Register<Key, Value> implements IRegister<Key, Value> {    
     
-    private static _requestRegisterInstance: RequestsRegister = null;
+    //private static _requestRegisterInstance: any = null;
 
-    private _storage: Map<string, Request> = null;
+    private _storage: Map<Key, RequestsRegisterElement<Value>> = null;
     private _capacity: number = 0;
     private readonly _delay: number = 5 * 60 * 60 * 1000;
     private readonly _startingCapacity = 500;
     
     constructor() {
-        if (RequestsRegister._requestRegisterInstance != null) throw new Error("Initialization failed: "+
-        "use Singleton.getInstance() instead of new.");
+        // if (RequestsRegister._requestRegisterInstance != null) throw new Error("Initialization failed: "+
+        // "use Singleton.getInstance() instead of new.");
 
         this._storage = new Map();
         this._capacity = this._startingCapacity;
-        RequestsRegister._requestRegisterInstance = this;
+        //RequestsRegister._requestRegisterInstance = this;
     }
 
-    public static getInstance(): RequestsRegister {
-        if (RequestsRegister._requestRegisterInstance == null) {
-            RequestsRegister._requestRegisterInstance = new RequestsRegister();
-        }
-        return RequestsRegister._requestRegisterInstance;
-    }
+    // public static getInstance(): RequestsRegister<Key, Value> {
+    //     if (RequestsRegister._requestRegisterInstance == null) {
+    //         RequestsRegister._requestRegisterInstance = new RequestsRegister();
+    //     }
+    //     return RequestsRegister._requestRegisterInstance;
+    // }
 
-    addItem(key: string, item: IApiRequest): void {
+    addItem(key: Key, item: Value): void {
         if (item == null || key == null) throw new Error("Illegal argument exception");
 
         this._storage.set(key, {element: item, lastProcessed: new Date().getTime()});
@@ -39,20 +37,20 @@ export class RequestsRegister implements IRegister<string, IApiRequest> {
         }  
     }    
     
-    hasItem(key: string): boolean {
+    hasItem(key: Key): boolean {
         if (key == null) throw new Error("Illegal argument exception");
         return this._storage.has(key);
     }
 
-    getItem(key: string): IApiRequest {
+    getItem(key: Key): Value {
         if (key == null) throw new Error("Illegal argument exception");
         return this._storage.get(key).element;
     }
 
-    deleteItem(key: string): IApiRequest {
+    deleteItem(key: Key): Value {
         if (key == null) throw new Error("Illegal argument exception");
 
-        let apiRequest: IApiRequest = null;
+        let apiRequest: Value = null;
         if (this._storage.has(key)) {//hash calculation?
             apiRequest = this._storage.get(key).element;
             this._storage.delete(key);
@@ -72,16 +70,16 @@ export class RequestsRegister implements IRegister<string, IApiRequest> {
     }
 
     private clearOutdated(): void {
-        const keysForDelete: string[] = [];
+        const keysForDelete: Key[] = [];
         const currentTime: number = new Date().getTime();
 
-        this._storage.forEach((value: Request, key: string, map: Map<String, Request>) => {
+        this._storage.forEach((value: RequestsRegisterElement<Value>, key: Key, map: Map<Key, RequestsRegisterElement<Value>>) => {
             if (currentTime - value.lastProcessed > this._delay) {
                 keysForDelete.push(key);
             }
         });
 
-        keysForDelete.forEach((value: string) => {
+        keysForDelete.forEach((value: Key) => {
             this._storage.delete(value);
         });
     }
@@ -90,6 +88,8 @@ export class RequestsRegister implements IRegister<string, IApiRequest> {
         this._capacity = value;
     }
 }
+
+// interface 
 
 interface RequestsRegisterElement<Element> {
     element: Element;

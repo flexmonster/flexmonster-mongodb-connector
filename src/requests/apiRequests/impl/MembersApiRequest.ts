@@ -12,8 +12,8 @@ export class MembersApiRequest extends AbstractApiRequest {
 
     protected buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema): any {
         const mongoQuery: any = queryBuilder.buildMembersPipeline(this.requestArgument.fieldObject, schema);
-        queryBuilder.applyPaging(mongoQuery, {skipNumber: this._currentPageIndex, limitNumber: this.CHUNK_SIZE});
-        this._currentPageIndex += this.CHUNK_SIZE;
+        //queryBuilder.applyPaging(mongoQuery, {skipNumber: this._currentPageIndex, limitNumber: this.CHUNK_SIZE});
+        //this._currentPageIndex += this.CHUNK_SIZE;
         return mongoQuery;
     };
 

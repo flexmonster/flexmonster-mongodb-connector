@@ -15,7 +15,7 @@ export class AggregationApiRequest extends AbstractApiRequest {
         if (queryBuilder == null) throw new Error("Illegal argument exception");
         const mongoQuery: any = queryBuilder.buildAggregationPipelineFacet(this._splitedQueries, schema); //TODO: rename "buildPipeline"
         //queryBuilder.applyPaging(mongoQuery, {skipNumber: this._currentPageIndex, limitNumber: this.CHUNK_SIZE});
-        this._currentPageIndex += this.CHUNK_SIZE;
+        //this._currentPageIndex += this.CHUNK_SIZE;
         return mongoQuery;
     }    
 
@@ -40,18 +40,20 @@ export class AggregationApiRequest extends AbstractApiRequest {
             clientQuery: query            
         });//the first query is to obtain intersections
 
-        this._splitSubTotalQuery(query, aggregationQueries);
-        this._splitGrandTotalQuery(query, aggregationQueries);
+        if (this.areValuesAvailable(query)) {
+            this._splitSubTotalQuery(query, aggregationQueries);
+            this._splitGrandTotalQuery(query, aggregationQueries);
+        }
 
         return aggregationQueries;
     }
 
-    private _splitSubTotalQuery(query: any, aggregationQueries: IQuery[]): void {
-        if (query["aggs"] == null || query["aggs"]["by"] == null) return;
+    private _splitSubTotalQuery(query: any, aggregationQueries: any[]): void {
+        if (!this.isSubTotalsAvailable(query)) return;
 
         const rowByQuery: any = JSON.parse(JSON.stringify(query));//a full copy of original query        
         delete rowByQuery["aggs"]["by"]["cols"];        
-        
+
         const colsByQuery: any = JSON.parse(JSON.stringify(query));//a full copy of original query
         delete colsByQuery["aggs"]["by"]["rows"];
 
@@ -67,12 +69,15 @@ export class AggregationApiRequest extends AbstractApiRequest {
                 clientQuery: colsByQuery
             });
         }
+        
         return;
     }
 
-    private _splitGrandTotalQuery(query: any, aggregationQueries: IQuery[]): void {
-        if (query["aggs"] == null) return;
+    private isSubTotalsAvailable(query: any): boolean {
+        return (query["aggs"] != null && query["aggs"]["by"] != null);
+    }
 
+    private _splitGrandTotalQuery(query: any, aggregationQueries: any[]): void {
         const grandTotalQuery: any = JSON.parse(JSON.stringify(query));
         delete grandTotalQuery["aggs"]["by"];
 
@@ -82,5 +87,9 @@ export class AggregationApiRequest extends AbstractApiRequest {
         });
 
         return;
+    }
+
+    private areValuesAvailable(query: any): boolean {
+        return (query["aggs"] != null && query["aggs"]["values"] != null && query["aggs"]["values"].length != 0)
     }
 }

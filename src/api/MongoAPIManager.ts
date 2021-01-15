@@ -11,13 +11,14 @@ import { AggregationApiRequest } from '../requests/apiRequests/impl/AggregationA
 import { DrillThroughApiRequest } from '../requests/apiRequests/impl/DrillThroughApiRequest';
 import { FlatApiRequest } from '../requests/apiRequests/impl/FlatApiRequest';
 import { DataManager } from '../cache/DataManager';
-import { CacheManager } from '../cache/CacheManager';
+import { LocalDataCache } from '../cache/impl/LocalDataCache';
+import { IDataCache } from '../cache/IDataCache';
 
 export class MongoAPIManager implements IDataAPI{
 
     private _mongoQueryManager: MongoQueryExecutor;
     private _mongoResponseParser: MongoResponseParser;
-    private _cacheManager: CacheManager;
+    private _cacheManager: IDataCache<string, any>;
     private _dataManager: DataManager;
     private _queryBuilder: QueryBuilder;
     private _dataLoader: RequestHandler;
@@ -26,9 +27,9 @@ export class MongoAPIManager implements IDataAPI{
     constructor() {
         this._mongoQueryManager = new MongoQueryExecutor();
         this._mongoResponseParser = MongoResponseParser.getInstance();
-        this._cacheManager = CacheManager.getInstance();
+        //this._cacheManager = LocalDataCache.getInstance();
         this._queryBuilder = QueryBuilder.getInstance();
-        this._dataManager = new DataManager(this._queryBuilder, this._mongoQueryManager, this._cacheManager);
+        this._dataManager = new DataManager(this._queryBuilder, this._mongoQueryManager);
         this._dataLoader = new RequestHandler(this._queryBuilder, this._mongoQueryManager, this._dataManager);
         this._schemaCache = {};
     }
@@ -58,9 +59,9 @@ export class MongoAPIManager implements IDataAPI{
      * @return {object}
      */
     public async getMembers(dbo: Db, index: CollectionName, fieldObject: any, pagingObject: PagingInterface): Promise<any> {
-        let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
+        let apiRequest: IApiRequest = /*(pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
             ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-            : new MembersApiRequest({index: index, fieldObject: fieldObject})
+            :*/ new MembersApiRequest({index: index, fieldObject: fieldObject, clientQuery: {"members": fieldObject}})
         return this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
     }
 
@@ -78,22 +79,22 @@ export class MongoAPIManager implements IDataAPI{
 
         if (query["aggs"] != null && query["fields"] == null) {
 
-            let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
+            let apiRequest: IApiRequest = /* (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                : new AggregationApiRequest({index: index, clientQuery: query});
+                :*/ new AggregationApiRequest({index: index, clientQuery: query});
             response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
 
         } else if (query["aggs"] == null && query["fields"] != null) {//drill-through
 
-            let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
+            let apiRequest: IApiRequest = /* (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                : new DrillThroughApiRequest({index: index, clientQuery: query})
+                :*/ new DrillThroughApiRequest({index: index, clientQuery: query})
             response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
         } else if (query["aggs"] != null && query["fields"] != null) {// flat-form
 
-            let apiRequest: IApiRequest = (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
+            let apiRequest: IApiRequest = /*(pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                : new FlatApiRequest({index: index, clientQuery: query})
+                :*/ new FlatApiRequest({index: index, clientQuery: query})
             response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
         }
 

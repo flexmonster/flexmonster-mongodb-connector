@@ -5,6 +5,8 @@ import {IRequestField} from '../requests/apiRequests/IRequestArgument';
 import {MongoFieldType} from '../utils/consts/MongoFieldType';
 import { Cursor } from 'mongodb';
 import { IQuery } from '../query/IQuery';
+import { ArrayDataObject } from '../cache/dataObject/impl/ArrayDataObject';
+import { MapDataObject } from '../cache/dataObject/impl/MapDataObject';
 
 export class MongoResponseParser {
 
@@ -44,15 +46,15 @@ export class MongoResponseParser {
         return storage;
     }
 
-    public parseCalculationsFromCursor(cursor: Promise<any>, query: IQuery[], startDate: Date = null): Promise<any[]> {
+    public parseCalculationsFromCursor(cursor: Promise<any>, query: IQuery[], startDate: Date = null): Promise<MapDataObject> {
         return new Promise((resolve, reject) => {
-            cursor.then((documents: any) => {
-                resolve(this.parseAggregations(documents, query, startDate));
+            cursor.then(async (documents: any) => {
+                resolve(new MapDataObject(await this.parseAggregations(documents, query, startDate)));
             });
         });
     }
 
-    private async parseAggregations(documents: Cursor, queries: IQuery[], startDate: Date = null): Promise<any> {
+    private async parseAggregations(documents: Cursor, queries: IQuery[], startDate: Date = null): Promise<Map<string, any>> {
         let result: Map<string, any> = new Map<string, any>();
         let keys = {};
         let values = {};
@@ -76,7 +78,7 @@ export class MongoResponseParser {
         return result;
     }
 
-    public parseMembersFromCursor(cursor: Promise<any>, fieldObject: IRequestField): Promise<any[]> {
+    public parseMembersFromCursor(cursor: Promise<any>, fieldObject: IRequestField): Promise<ArrayDataObject> {
         return new Promise((resolve, reject) => {
             const fieldUniqueName: string = fieldObject.uniqueName;
             cursor.then((documents: any) => {
@@ -88,7 +90,7 @@ export class MongoResponseParser {
                             "value": this.parseValueFromComplexType(value)
                         });
                     }, () => {
-                        resolve(result);
+                        resolve(new ArrayDataObject(result));
                 });
             });
         });

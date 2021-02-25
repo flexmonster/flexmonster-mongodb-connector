@@ -11,7 +11,8 @@ export class APISchema {
             "members": true,
             "query": true,
             "valueQuery": false
-        }
+        },
+        "advanced": true
     };
 
     constructor (mapOfSchemaValueObjects = new Map<FieldUniqueName, SchemaValueObject>(), sorted = false) {

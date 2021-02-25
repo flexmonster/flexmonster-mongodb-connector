@@ -31,7 +31,7 @@ export class QueryBuilder {
         return this._queryBuilderInstance;
     }
 
-    public buildDrillThroughPipeline(drillThroughQuery: any, schema: APISchema) {
+    public buildDrillThroughPipeline(drillThroughQuery: any, schema: APISchema, clientSideLimit: number) {
         if (drillThroughQuery == null) throw new Error("Illegal argument exception. Query cannot be null");
 
         const pipeline: any[] = [];
@@ -58,6 +58,10 @@ export class QueryBuilder {
         delete extendedQuery["filter"];
         pipeline.push({
             [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(extendedQuery, schema)
+        });
+
+        pipeline.push({
+            [MongoPipelineStages.LIMIT]: clientSideLimit
         });
 
         return pipeline;
@@ -89,10 +93,54 @@ export class QueryBuilder {
         return pipeline;
     }
 
+    public buildFlatPipelineFacet(query: any | IQuery[], schema: APISchema) {
+        if (query == null) throw new Error("Illegal argument exception. Query cannot be null");
+        const pipeline: any[] = [];
+        const grandTotalQuery: IQuery = query[0];
+        const dataRecords: IQuery = query[1];
+
+        const extendedQuery: any = {
+            "aggs": {
+                "by": {
+                    "rows": dataRecords.clientQuery["fields"]
+                }
+            },
+            "filter": dataRecords.clientQuery["filter"]
+        };
+
+        pipeline.push({
+            [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(extendedQuery, schema)
+        });
+
+        if (extendedQuery["filter"] != null) {
+            pipeline.push({
+                "$match": this._filterQueryBuilder.buildFilterQuery(extendedQuery["filter"], schema)
+            });
+
+            //need to test performance with and without this block
+            const queryCopy: any = JSON.parse(JSON.stringify(extendedQuery)); 
+            delete queryCopy["filter"]; //query with no filter;    
+            pipeline.push({
+                [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(queryCopy, schema)
+            });
+        }
+
+        const facetStage: any = {};
+        facetStage[query[0].definition] = [this._groupingQueryBuilder.buildGroupStage(grandTotalQuery.clientQuery["aggs"])];
+        facetStage[query[1].definition] = [pipeline[0]];
+
+        pipeline.push({
+            [MongoPipelineStages.FACET]: facetStage
+        });
+
+        //console.log(">>>>>pipe", JSON.stringify(pipeline))
+        return pipeline;
+    }
+
     public buildAggregationPipelineFacet(query: any | IQuery[], schema: APISchema) {
         if (query == null) throw new Error("Illegal argument exception. Query cannot be null");
         const pipeline: any[] = [];
-        const intersectionQuery: IQuery = query[0];
+        const intersectionQuery: IQuery = (<IQuery[]>query).shift();
 
         pipeline.push({
             [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(intersectionQuery.clientQuery, schema)
@@ -115,13 +163,15 @@ export class QueryBuilder {
             const facetStage: any = {};
             
             for (let i = 0; i < query.length; i++) {
-                facetStage[query[i].definition] = [this._groupingQueryBuilder.buildGroupStage(query[i].clientQuery["aggs"])];                
+                facetStage[query[i].definition] = [this._groupingQueryBuilder.buildGroupStage(query[i].clientQuery["aggs"])/*, {"$limit": 100000}*/];
             }
 
             pipeline.push({
                 [MongoPipelineStages.FACET]: facetStage
             });
         }
+
+        //console.log(">>>>>>>Mongo", JSON.stringify(pipeline, null, ''));
         return pipeline;
     }
 
@@ -136,9 +186,16 @@ export class QueryBuilder {
 
         let pipeline: any[] = [];
 
+        // pipeline.push({
+        //     [MongoPipelineStages.SORT]: {
+        //         [field.uniqueName]: 1
+        //     }
+        // });
+        
         pipeline.push({
             [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(query, schema)
         });
+
         pipeline.push(this._groupingQueryBuilder.buildGroupStage(query["aggs"]));
 
         return pipeline;

@@ -1,11 +1,16 @@
 import { DataRetrievalInterface, RetrievalResult } from "../DataRetrievalInterface";
+import { MemoryCalculator } from "../../../utils/MemoryCalculator";
 
 export class MapDataObject implements DataRetrievalInterface {
 
     private data: Map<string, any>;
+    public dataSize: number; // dataSize in bytes
+    public timeForCalculation: number; // ms
 
-    constructor(parsedData: Map<string, any>) {
+    constructor(parsedData: Map<string, any>, startDate: Date) {
         this.data = parsedData;
+        this.dataSize = MemoryCalculator.calculateMapDataSize(this.data);
+        this.timeForCalculation = new Date().getTime() - startDate.getTime();
     }
 
     public getIterationKeys(): IterableIterator<string> {
@@ -33,5 +38,6 @@ export class MapDataObject implements DataRetrievalInterface {
             data: dataChunk,
             isFinished: isFinished
         }
-    }    
+    }
+    
 }

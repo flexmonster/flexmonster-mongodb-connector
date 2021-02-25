@@ -3,9 +3,13 @@ import { DataRetrievalInterface, RetrievalResult } from "../DataRetrievalInterfa
 export class ArrayDataObject implements DataRetrievalInterface {
 
     private data: any[];
+    public dataSize: number; // dataSize in bytes
+    public timeForCalculation: number; // ms
 
-    constructor(parsedData: any[]) {
+    constructor(parsedData: any[], startDate: Date = new Date()) {
         this.data = parsedData;
+        this.dataSize = 
+        this.timeForCalculation = new Date().getTime() - startDate.getTime();
     }
 
     getIterationKeys(): IterableIterator<number> {

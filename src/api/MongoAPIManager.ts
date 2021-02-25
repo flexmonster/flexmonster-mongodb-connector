@@ -43,11 +43,13 @@ export class MongoAPIManager implements IDataAPI{
     public async getSchema(dbo: Db, index: string): Promise<APISchema> {
         if (typeof index != 'string') throw new Error("Incorrect index format");
         this._mongoQueryManager.injectDBConnection(dbo);
-        if (this._schemaCache[index] == null) {
+        const dbName: string = dbo.databaseName;
+        if (this.getIndexSchema(dbName, index) == null) {
+            //console.log(">>>>>>", index, dbo);
             let document: any = await this._mongoQueryManager.runShemaQuery(index);
-            this._schemaCache[index] = this._mongoResponseParser.parseShemaFromDocument(document);
+            this.setIndexSchema(dbName, index ,this._mongoResponseParser.parseShemaFromDocument(document));
         }
-        return this._schemaCache[index].toJSON();
+        return this.getIndexSchema(dbName, index).toJSON();
     }
 
     /**
@@ -62,7 +64,7 @@ export class MongoAPIManager implements IDataAPI{
         let apiRequest: IApiRequest = /*(pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
             ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
             :*/ new MembersApiRequest({index: index, fieldObject: fieldObject, clientQuery: {"members": fieldObject}})
-        return this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
+        return this._dataLoader.loadData(dbo, this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
     }
 
     /**
@@ -82,26 +84,30 @@ export class MongoAPIManager implements IDataAPI{
             let apiRequest: IApiRequest = /* (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
                 :*/ new AggregationApiRequest({index: index, clientQuery: query});
-            response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
+            response = this._dataLoader.loadData(dbo, this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
 
         } else if (query["aggs"] == null && query["fields"] != null) {//drill-through
 
             let apiRequest: IApiRequest = /* (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
                 :*/ new DrillThroughApiRequest({index: index, clientQuery: query})
-            response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
+            response = this._dataLoader.loadData(dbo, this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
         } else if (query["aggs"] != null && query["fields"] != null) {// flat-form
 
             let apiRequest: IApiRequest = /*(pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
                 :*/ new FlatApiRequest({index: index, clientQuery: query})
-            response = this._dataLoader.loadData(dbo, this.getIndexSchema(index), apiRequest, pagingObject);
+            response = this._dataLoader.loadData(dbo, this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
         }
 
         return response;
     }
 
-    private getIndexSchema(index: string): APISchema {
-        return this._schemaCache[index];
+    private getIndexSchema(dbName: string, index: string): APISchema {
+        return this._schemaCache[`${dbName}_${index}`];
+    }
+
+    private setIndexSchema(dbName: string, index: string, apiSchema: APISchema): void {
+        this._schemaCache[`${dbName}_${index}`] = apiSchema;
     }
 }

@@ -1,6 +1,6 @@
 import {ClientSideFieldType} from '../../utils/consts/ClientSideFieldType';
 import {ClientSideFilterQueries} from '../../utils/consts/ClientSideFilterQueries';
-import {MongoQueries} from '../../utils/consts/MongoQueries';
+import {MongoFilterQueries} from '../../utils/consts/MongoFilterQueries';
 import {IRequestField} from '../../requests/apiRequests/IRequestArgument';
 import { APISchema } from '../../schema/APISchema';
 
@@ -9,11 +9,75 @@ export class FilterQueryBuilder {
     constructor() {}
 
     public buildFilterQuery(query: any, schema: APISchema) {
+        //console.log(">>>>>>", JSON.stringify(query, null, " "));
         let filterQuery = {};
+
+        if (Array.isArray(query)) {
+            this._buildClassicFilter(query, schema, filterQuery);
+        } else {
+            filterQuery = this._buildAdvancedFilter(query, schema);
+        }
+
+        //console.log(">>>>>>Mongo", JSON.stringify(filterQuery, null, " "));
+        return filterQuery;
+    }
+
+    private _buildClassicFilter(query: any, schema: APISchema, filterQuery: any) {
         for (let i = 0; i < query.length; i++) {
             this._filterField(query[i], schema, filterQuery);
         }
-        return filterQuery;
+        return;
+    }
+
+    private _buildAdvancedFilter(query: any, schema: APISchema) {
+        const operationsList: any[] = [];
+        const mongoFilterObject: object = {
+            [this._getMongoLogicOperator(query["type"])]: operationsList
+        };
+
+        this._buildAvancedFilterRecursively(query["value"], schema, operationsList);
+
+        return mongoFilterObject;
+    }
+
+    private _buildAvancedFilterRecursively(query: any[], schema: APISchema, operationsList: any[]) {
+        for (let i = 0; i < query.length; i++) {
+            operationsList.push(this._buildAdvancedFilterItem(query[i], schema));
+        }
+        return;
+    }
+
+    private _buildAdvancedFilterItem(query: any, schema: APISchema): any {
+        if (typeof query["type"] !== "undefined") {
+            const operationsList: any[] = [];
+            const mongoFilterObject: object = {
+                [this._getMongoLogicOperator(query["type"])]: operationsList
+            };
+            
+            this._buildAvancedFilterRecursively(query["value"], schema, operationsList);
+
+            return mongoFilterObject;
+        } else {
+            const mongoFilterObject: object = {};
+            this._filterField(query, schema, mongoFilterObject);
+            return mongoFilterObject;
+        }
+    }
+
+    private _getMongoLogicOperator(clientLogicOperator: string): string {
+        let mongoLogicOperator: string = "";
+        
+        if (ClientSideFilterQueries.AND === clientLogicOperator) {
+            mongoLogicOperator = MongoFilterQueries.AND;
+        } else if (ClientSideFilterQueries.OR === clientLogicOperator) {
+            mongoLogicOperator = MongoFilterQueries.OR;
+        }
+
+        if (mongoLogicOperator.length === 0) {
+            throw new Error("Invalid client filter format");
+        }
+
+        return mongoLogicOperator;
     }
 
     private _filterField(query: any, schema: APISchema, filterQuery: any) {
@@ -40,45 +104,45 @@ export class FilterQueryBuilder {
             query = query["query"];
 
             if (query[ClientSideFilterQueries.BEGIN]) {
-                fieldFilterObject[MongoQueries.REGEXP] = new RegExp("^" + query[ClientSideFilterQueries.BEGIN], FLAGS);
+                fieldFilterObject[MongoFilterQueries.REGEXP] = new RegExp("^" + query[ClientSideFilterQueries.BEGIN], FLAGS);
             } else if (query[ClientSideFilterQueries.NOT_BEGIN]) {
-                fieldFilterObject[MongoQueries.REGEXP] = new RegExp("^(?!" + query[ClientSideFilterQueries.NOT_BEGIN] + ").*", FLAGS);
+                fieldFilterObject[MongoFilterQueries.REGEXP] = new RegExp("^(?!" + query[ClientSideFilterQueries.NOT_BEGIN] + ").*", FLAGS);
             } else if (query[ClientSideFilterQueries.CONTAIN]) {
-                fieldFilterObject[MongoQueries.REGEXP] = new RegExp(query[ClientSideFilterQueries.CONTAIN], FLAGS);
+                fieldFilterObject[MongoFilterQueries.REGEXP] = new RegExp(query[ClientSideFilterQueries.CONTAIN], FLAGS);
             } else if (query[ClientSideFilterQueries.NOT_CONTAIN]) {
-                fieldFilterObject[MongoQueries.REGEXP] = new RegExp("^((?!" + query[ClientSideFilterQueries.NOT_CONTAIN] + ").)*$", FLAGS);
+                fieldFilterObject[MongoFilterQueries.REGEXP] = new RegExp("^((?!" + query[ClientSideFilterQueries.NOT_CONTAIN] + ").)*$", FLAGS);
             } else if (query[ClientSideFilterQueries.END]) {
-                fieldFilterObject[MongoQueries.REGEXP] = new RegExp(query[ClientSideFilterQueries.END] + "$", FLAGS);
+                fieldFilterObject[MongoFilterQueries.REGEXP] = new RegExp(query[ClientSideFilterQueries.END] + "$", FLAGS);
             } else if (query[ClientSideFilterQueries.NOT_END]) {
-                fieldFilterObject[MongoQueries.REGEXP] = new RegExp("^(?!.*" + query[ClientSideFilterQueries.NOT_END] + "$).*$", FLAGS);
+                fieldFilterObject[MongoFilterQueries.REGEXP] = new RegExp("^(?!.*" + query[ClientSideFilterQueries.NOT_END] + "$).*$", FLAGS);
             } else if (query[ClientSideFilterQueries.EQUAL]) {
-                fieldFilterObject[MongoQueries.EQUAL] = query[ClientSideFilterQueries.EQUAL];
+                fieldFilterObject[MongoFilterQueries.EQUAL] = query[ClientSideFilterQueries.EQUAL];
             } else if (query[ClientSideFilterQueries.NOT_EQUAL]) {
-                fieldFilterObject[MongoQueries.NOT] = { 
-                        [MongoQueries.EQUAL]: query[ClientSideFilterQueries.NOT_EQUAL]
+                fieldFilterObject[MongoFilterQueries.NOT] = { 
+                        [MongoFilterQueries.EQUAL]: query[ClientSideFilterQueries.NOT_EQUAL]
                 };
             } else if (query[ClientSideFilterQueries.GREATER]) {
-                fieldFilterObject[MongoQueries.GREATER] = query[ClientSideFilterQueries.GREATER];
+                fieldFilterObject[MongoFilterQueries.GREATER] = query[ClientSideFilterQueries.GREATER];
             } else if (query[ClientSideFilterQueries.GREATER_EQUAL]) {
-                fieldFilterObject[MongoQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.GREATER_EQUAL];
+                fieldFilterObject[MongoFilterQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.GREATER_EQUAL];
             } else if (query[ClientSideFilterQueries.LESS]) {
-                fieldFilterObject[MongoQueries.LESS] = query[ClientSideFilterQueries.LESS];
+                fieldFilterObject[MongoFilterQueries.LESS] = query[ClientSideFilterQueries.LESS];
             } else if (query[ClientSideFilterQueries.LESS_EQUAL]) {
-                fieldFilterObject[MongoQueries.LESS_EQUAL] = query[ClientSideFilterQueries.LESS_EQUAL];
+                fieldFilterObject[MongoFilterQueries.LESS_EQUAL] = query[ClientSideFilterQueries.LESS_EQUAL];
             } else if (query[ClientSideFilterQueries.BETWEEN]) {
-                fieldFilterObject[MongoQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.BETWEEN][0];
-                fieldFilterObject[MongoQueries.LESS_EQUAL] = query[ClientSideFilterQueries.BETWEEN][1];
+                fieldFilterObject[MongoFilterQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.BETWEEN][0];
+                fieldFilterObject[MongoFilterQueries.LESS_EQUAL] = query[ClientSideFilterQueries.BETWEEN][1];
             } else if (query[ClientSideFilterQueries.NOT_BETWEEN]) {
-                fieldFilterObject[MongoQueries.NOT] = {
-                    [MongoQueries.GREATER_EQUAL]: query[ClientSideFilterQueries.NOT_BETWEEN][0],
-                    [MongoQueries.LESS_EQUAL]: query[ClientSideFilterQueries.NOT_BETWEEN][1]
+                fieldFilterObject[MongoFilterQueries.NOT] = {
+                    [MongoFilterQueries.GREATER_EQUAL]: query[ClientSideFilterQueries.NOT_BETWEEN][0],
+                    [MongoFilterQueries.LESS_EQUAL]: query[ClientSideFilterQueries.NOT_BETWEEN][1]
                 };
             }
         } else {
             if (query[ClientSideFilterQueries.INCLUDE]) {
-                fieldFilterObject[MongoQueries.INCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.INCLUDE]);
+                fieldFilterObject[MongoFilterQueries.INCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.INCLUDE]);
             } else if (query[ClientSideFilterQueries.EXCLUDE]) {
-                fieldFilterObject[MongoQueries.EXCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.EXCLUDE]);
+                fieldFilterObject[MongoFilterQueries.EXCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.EXCLUDE]);
             }
         }
 
@@ -104,35 +168,35 @@ export class FilterQueryBuilder {
             query = query["query"];
 
             if (query[ClientSideFilterQueries.BEFORE]) {
-                mongoFilterQuery[MongoQueries.LESS] = query[ClientSideFilterQueries.BEFORE];
+                mongoFilterQuery[MongoFilterQueries.LESS] = query[ClientSideFilterQueries.BEFORE];
             } else if (query[ClientSideFilterQueries.BEFORE_EQUAL]) {
-                mongoFilterQuery[MongoQueries.LESS] = query[ClientSideFilterQueries.BEFORE_EQUAL] + this._msDay;
+                mongoFilterQuery[MongoFilterQueries.LESS] = query[ClientSideFilterQueries.BEFORE_EQUAL] + this._msDay;
             } else if (query[ClientSideFilterQueries.EQUAL]) {
-                mongoFilterQuery[MongoQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.EQUAL];
-                mongoFilterQuery[MongoQueries.LESS] = query[ClientSideFilterQueries.EQUAL] + this._msDay; 
+                mongoFilterQuery[MongoFilterQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.EQUAL];
+                mongoFilterQuery[MongoFilterQueries.LESS] = query[ClientSideFilterQueries.EQUAL] + this._msDay; 
             } else if (query[ClientSideFilterQueries.NOT_EQUAL]) {
-                mongoFilterQuery[MongoQueries.NOT] = {
-                    [MongoQueries.GREATER_EQUAL]: query[ClientSideFilterQueries.NOT_EQUAL],
-                    [MongoQueries.LESS]: query[ClientSideFilterQueries.NOT_EQUAL] + this._msDay
+                mongoFilterQuery[MongoFilterQueries.NOT] = {
+                    [MongoFilterQueries.GREATER_EQUAL]: query[ClientSideFilterQueries.NOT_EQUAL],
+                    [MongoFilterQueries.LESS]: query[ClientSideFilterQueries.NOT_EQUAL] + this._msDay
                 };
             } else if (query[ClientSideFilterQueries.AFTER]) {
-                mongoFilterQuery[MongoQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.AFTER] + this._msDay;
+                mongoFilterQuery[MongoFilterQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.AFTER] + this._msDay;
             } else if (query[ClientSideFilterQueries.AFTER_EQUAL]) {
-                mongoFilterQuery[MongoQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.AFTER_EQUAL];
+                mongoFilterQuery[MongoFilterQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.AFTER_EQUAL];
             } else if (query[ClientSideFilterQueries.BETWEEN]) {
-                mongoFilterQuery[MongoQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.BETWEEN][0];
-                mongoFilterQuery[MongoQueries.LESS_EQUAL] = query[ClientSideFilterQueries.BETWEEN][1];
+                mongoFilterQuery[MongoFilterQueries.GREATER_EQUAL] = query[ClientSideFilterQueries.BETWEEN][0];
+                mongoFilterQuery[MongoFilterQueries.LESS_EQUAL] = query[ClientSideFilterQueries.BETWEEN][1];
             } else if (query[ClientSideFilterQueries.NOT_BETWEEN]) {
-                mongoFilterQuery[MongoQueries.NOT] = {
-                    [MongoQueries.GREATER_EQUAL]: query[ClientSideFilterQueries.NOT_BETWEEN][0],
-                    [MongoQueries.LESS_EQUAL]: query[ClientSideFilterQueries.NOT_BETWEEN][1]
+                mongoFilterQuery[MongoFilterQueries.NOT] = {
+                    [MongoFilterQueries.GREATER_EQUAL]: query[ClientSideFilterQueries.NOT_BETWEEN][0],
+                    [MongoFilterQueries.LESS_EQUAL]: query[ClientSideFilterQueries.NOT_BETWEEN][1]
                 };
             }
         } else {
             if (query[ClientSideFilterQueries.INCLUDE]) {
-                mongoFilterQuery[MongoQueries.INCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.INCLUDE]);
+                mongoFilterQuery[MongoFilterQueries.INCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.INCLUDE]);
             } else if (query[ClientSideFilterQueries.EXCLUDE]) {
-                mongoFilterQuery[MongoQueries.EXCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.EXCLUDE]);
+                mongoFilterQuery[MongoFilterQueries.EXCLUDE] = this.parseIncludeExcludeMembers(query[ClientSideFilterQueries.EXCLUDE]);
             }
         }
 

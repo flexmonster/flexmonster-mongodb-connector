@@ -6,7 +6,8 @@ import {MongoFieldType} from '../utils/consts/MongoFieldType';
 import { Cursor } from 'mongodb';
 import { IQuery } from '../query/IQuery';
 import { ArrayDataObject } from '../cache/dataObject/impl/ArrayDataObject';
-import { MapDataObject } from '../cache/dataObject/impl/MapDataObject';
+import { FlatResultDataObject } from '../cache/dataObject/impl/FlatRequestDataObject';
+import { AggregationRequestDataObject } from '../cache/dataObject/impl/AggregationRequestDataObject';
 
 export class MongoResponseParser {
 
@@ -46,16 +47,19 @@ export class MongoResponseParser {
         return storage;
     }
 
-    public parseCalculationsFromCursor(cursor: Promise<any>, query: IQuery[], startDate: Date = null): Promise<MapDataObject> {
+    public parseCalculationsFromCursor(cursor: Promise<any>, query: IQuery[], dataChunkSize: number, startDate: Date = null): Promise<AggregationRequestDataObject> {
         return new Promise((resolve, reject) => {
             cursor.then(async (documents: any) => {
-                resolve(new MapDataObject(await this.parseAggregations(documents, query, startDate)));
+                const parsingResult = await this.parseAggregations(documents, query, dataChunkSize, startDate);
+                resolve(new AggregationRequestDataObject(parsingResult.result, parsingResult.startDate));
             });
         });
     }
 
-    private async parseAggregations(documents: Cursor, queries: IQuery[], startDate: Date = null): Promise<Map<string, any>> {
-        let result: Map<string, any> = new Map<string, any>();
+    private async parseAggregations(documents: Cursor, queries: IQuery[], dataChunkSize: number, startDate: Date = null): Promise<any> {
+        //const aggregationApiRequest: AggregationApiRequest = new 
+        let parsedData: any[] = [];
+        let dataChunk: any[] = [];
         let keys = {};
         let values = {};
         if (startDate != null) console.log(">>>>>>>query", new Date().getTime() - startDate.getTime());
@@ -66,16 +70,24 @@ export class MongoResponseParser {
                 queryDefinition = queries[i].definition;
                 for (let j = 0; j < data[queryDefinition].length; j++) {
                     keys = this.parseDotsFromKeys(data[queryDefinition][j]["_id"]);
-                    values = this._parseValues(data[queryDefinition][j], {});                    
-                    result.set(JSON.stringify(keys), {
+                    values = this._parseValues(data[queryDefinition][j], {});
+                    if (dataChunkSize <= dataChunk.length) {
+                        parsedData.push(dataChunk);
+                        dataChunk = [];
+                    }  
+                    dataChunk.push({
                         "keys": keys,
                         "values": values
                     });
                 }
             }
+            if (dataChunk.length > 0) parsedData.push(dataChunk);
         });
         if (startDate != null) console.log(">>>>>>>parse", new Date().getTime() - startDate.getTime());
-        return result;
+        return {
+            startDate: startDate,
+            result: parsedData
+        };
     }
 
     public parseMembersFromCursor(cursor: Promise<any>, fieldObject: IRequestField): Promise<ArrayDataObject> {
@@ -96,22 +108,58 @@ export class MongoResponseParser {
         });
     }
 
-    public parseFlatFromCursor(cursor: Promise<any>, fields: IRequestField[], isGrandTotal: boolean): Promise<any[]> {
+    public parseFlatFromCursor(cursor: Promise<any>, fields: IRequestField[], queries: IQuery[]): Promise<FlatResultDataObject> {
         return new Promise((resolve, reject) => {
-            cursor.then(async (documents: Cursor) => {
-                if (!isGrandTotal) {
-                    resolve(this.parseDrillThroughData(documents, fields));
-                } else {
-                    //resolve(this.parseAggregations(documents));
-                }
+            const result: any = {
+                "fields": [],
+                "hits": [],
+                "aggs": []
+            };
+            let keys = null;
+            let values = null;
+            cursor.then(async (documents: any) => {
+                await documents.forEach((data: any) => {
+                    // console.log(">>>>>>", this.parseDrillThroughData(data["dataRecords"], fields));
+                    // console.log(">>>>>>", this.parseAggregations(data, queries));
+                    //console.log(">>>>>>", data);
+
+                    let queryDefinition: string = null;
+                    for (let i = 0; i < queries.length; i++) {
+                        queryDefinition = queries[i].definition;
+
+                        if (queryDefinition === "dataRecords") {
+                            for (let j = 0; j < data[queryDefinition].length; j++) {
+                                result["hits"].push(this.parseDrillThroughHit(data[queryDefinition][j], fields));
+                            }
+                        } else {
+                            for (let j = 0; j < data[queryDefinition].length; j++) {
+                                keys = this.parseDotsFromKeys(data[queryDefinition][j]["_id"]);
+                                values = this._parseValues(data[queryDefinition][j], {});     
+                                result.aggs.push({
+                                    "keys": keys,
+                                    "values": values
+                                });
+                            }
+                        }
+                    }
+                });
+
+                result["fields"] = this.parseDrillThroughFields(fields);
+
+                resolve(new FlatResultDataObject(result));
+                // if (!isGrandTotal) {
+                //     resolve(this.parseDrillThroughData(documents, fields));
+                // } else {
+                //     //resolve(this.parseAggregations(documents));
+                // }
             });
         });
     }
 
-    public parseDrillThroughFromCursor(cursor: Promise<any>, fields: IRequestField[]): Promise<any[]> {
+    public parseDrillThroughFromCursor(cursor: Promise<any>, fields: IRequestField[], startDate: Date): Promise<FlatResultDataObject> {
         return new Promise((resolve, reject) => {
-            cursor.then((documents: any) => {
-                resolve(this.parseDrillThroughData(documents, fields));
+            cursor.then(async (documents: any) => {
+                resolve(new FlatResultDataObject(await this.parseDrillThroughData(documents, fields)));
             });
         });
     }
@@ -141,6 +189,7 @@ export class MongoResponseParser {
     }
 
     private parseDrillThroughHit(document: any, fieldsFromQuery: IRequestField[]): any[] {
+
         const hit: any[] = [];
         for (let i = 0; i < fieldsFromQuery.length; i++) {
             const fieldKey: string = fieldsFromQuery[i].uniqueName;

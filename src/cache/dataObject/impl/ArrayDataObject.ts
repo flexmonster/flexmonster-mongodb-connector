@@ -1,42 +1,36 @@
-import { DataRetrievalInterface, RetrievalResult } from "../DataRetrievalInterface";
+import { RetrievalResult } from "../DataRetrievalInterface";
+//import { CachedDataInterface } from "../CachedDataInterface";
+import { AbstractDataObject } from "./AbstractDataObject";
 
-export class ArrayDataObject implements DataRetrievalInterface {
+export class ArrayDataObject extends AbstractDataObject {//implements DataRetrievalInterface, CachedDataInterface {
 
-    private data: any[];
-    public dataSize: number; // dataSize in bytes
-    public timeForCalculation: number; // ms
+    private data: any[]; //[][]
+    public computationTime: number; // ms
+    public dataMemorySize: number;
 
-    constructor(parsedData: any[], startDate: Date = new Date()) {
+    constructor(parsedData: any[], startDate: Date, dataMemorySize: number = 0) {
+        super();
         this.data = parsedData;
-        this.dataSize = 
-        this.timeForCalculation = new Date().getTime() - startDate.getTime();
+        this.computationTime = new Date().getTime() - startDate.getTime();
+        this.dataMemorySize = dataMemorySize;
     }
 
-    getIterationKeys(): IterableIterator<number> {
-        return this.data.keys();
-    }
+    public getChunk(iterator: IterableIterator<number>, chunkSize: number): RetrievalResult {
+        let item = iterator.next();
+        let chunk = this.data[item.value];
+        let isFinished = item.done || item.value + 1 === this.data.length;
 
-    getChunk(iterator: IterableIterator<number>, chunkSize: number): RetrievalResult {
-        let chunk = null;
-        let isFinished = false;
-        if (chunkSize >= this.data.length) {
-            chunk = this.data.slice(0);
-            isFinished = true;
-        } else {
-            chunk = [];
-            let item = iterator.next();
-            let currentChunkSize = 0;
-
-            while (!item.done && currentChunkSize < chunkSize) {
-                chunk.push(this.data[item.value]);
-                currentChunkSize++;
-                item = iterator.next();
-            }
-            isFinished = item.done;
-        }
         return {
             data: chunk,
             isFinished: isFinished
         }
     }
+
+    public getIterationKeys(): IterableIterator<number> {
+        return this.data.keys();
+    }
+
+    public push(dataChunk: any[]): void {
+        this.data.push(dataChunk);
+    }    
 }

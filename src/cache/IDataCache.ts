@@ -7,4 +7,5 @@ export interface IDataCache<KeyType, DataType> {
     clearCache(): void;
     setTimeToLive(seconds: number): void;
     setCacheStrategie(cacheStrategie: ICacheStrategie): void;
+    getCacheMemoryStatus(): string;
 }

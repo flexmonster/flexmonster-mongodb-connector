@@ -11,7 +11,11 @@ export class ProbibalisticCacheStrategie implements ICacheStrategie {
 
     private isProbabilisticCacheFlushNeeded(cachedDataObject: CachedDataObject, timeToLive: number, beta: number): boolean {
         if (cachedDataObject == null) return true;
-        return timeToLive > 0 && new Date().getTime() - cachedDataObject.computationTime * beta * Math.log(Math.random()) 
-            > cachedDataObject.timeStamp + timeToLive * 1000;
+
+        const randomPart: number = Math.log(Math.random());
+        const expectations: number = new Date().getTime() - cachedDataObject.computationTime * beta * randomPart;
+        const state: number = cachedDataObject.timeStamp + timeToLive * 1000 * 60;
+
+        return timeToLive > 0 && expectations > state;
     } 
 }

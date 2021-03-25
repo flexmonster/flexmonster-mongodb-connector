@@ -17,8 +17,8 @@ export class MembersApiRequest extends AbstractApiRequest {
         return mongoQuery;
     };
 
-    protected parseQueryResult = (queryResult: Promise<any>) => 
-        MongoResponseParser.getInstance().parseMembersFromCursor(queryResult, this.requestArgument.fieldObject);
+    protected parseQueryResult = (queryResult: Promise<any>, startDate: Date) => 
+        MongoResponseParser.getInstance().parseMembersFromCursor(queryResult, this.requestArgument.fieldObject, this.CHUNK_SIZE, startDate);
 
     public toJSON(response: any, nextPageToken: string): any {
         const jsonResponse: any = {

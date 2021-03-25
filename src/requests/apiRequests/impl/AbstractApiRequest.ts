@@ -4,6 +4,7 @@ import {QueryBuilder} from "../../../query/builder/QueryBuilder";
 import { MongoQueryExecutor } from "../../../query/MongoQueryExecutor";
 import { APISchema } from "../../../schema/APISchema";
 import { IQuery } from "../../../query/IQuery";
+import { Db } from "mongodb";
 
 export abstract class AbstractApiRequest implements IApiRequest{
 
@@ -11,11 +12,13 @@ export abstract class AbstractApiRequest implements IApiRequest{
     protected _splitedQueries: any[] | IQuery[];
     protected _curentQueryIndex: number;
     protected _currentPageIndex: number;
+    protected _db: Db;
     protected CHUNK_SIZE: number = 50000;
 
     constructor(requestArgument: IRequestArgument) {
         this._requestArgument = requestArgument;
         this._splitedQueries = this._splitQuery(this._requestArgument.clientQuery);
+        this._db = requestArgument.db;
         this._curentQueryIndex = 0;
         this._currentPageIndex = 0;
     }
@@ -54,12 +57,13 @@ export abstract class AbstractApiRequest implements IApiRequest{
 
     protected executeQuery(queryExecutor: MongoQueryExecutor, mongoQuery: any): Promise<any> {
         if (queryExecutor == null || mongoQuery == null) throw new Error("Illegal argument exception");
+        queryExecutor.injectDBConnection(this._db);
         return queryExecutor.runAggregateQuery(this._requestArgument.index, mongoQuery);
     }
 
     abstract toJSON(response: any, nextpageToken?: string): any;
 
     protected abstract buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema): any;
-    protected abstract parseQueryResult(queryResultCursor: Promise<any>, date?: Date): Promise<any>;
+    protected abstract parseQueryResult(queryResultCursor: Promise<any>, date: Date): Promise<any>;
 
 }

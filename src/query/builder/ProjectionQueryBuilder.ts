@@ -50,7 +50,7 @@ export class ProjectionQueryBuilder {
         }
     }
 
-    private _buildProjectionFromRowsColumns(rowsColumns: any, schema: APISchema, projectionQuery: any) {
+    private _buildProjectionFromRowsColumns(rowsColumns: any[], schema: APISchema, projectionQuery: any) {
         if (rowsColumns == null) return;
         let fieldReference = null;
         let fieldObject: IRequestField = null;

@@ -1,5 +1,8 @@
+import { Db } from "mongodb";
+
 export interface IRequestArgument {
 
+    db: Db
     index: string;
     fieldObject?: IRequestField;
     clientQuery: any;

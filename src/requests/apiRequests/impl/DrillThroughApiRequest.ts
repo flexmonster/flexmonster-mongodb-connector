@@ -23,12 +23,13 @@ export class DrillThroughApiRequest extends AbstractApiRequest {
 
             const mongoQuery: any = this.buildMongoQuery(queryBuilder, schema);
 
+            const startDate = new Date();
             const queryResultCursor: Promise<any> = this.executeQuery(queryExecutor, mongoQuery);
 
             //data = await this.parseQueryResult(queryResultCursor);
         //}
 
-        return this.parseQueryResult(queryResultCursor);;
+        return this.parseQueryResult(queryResultCursor, startDate);
     }
     
     buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema) {
@@ -49,8 +50,8 @@ export class DrillThroughApiRequest extends AbstractApiRequest {
     //     return limit;
     // }
 
-    parseQueryResult = (queryResult: Promise<any>, date?: Date) =>
-        MongoResponseParser.getInstance().parseDrillThroughFromCursor(queryResult, this._splitedQueries[this._curentQueryIndex]["fields"], date);
+    parseQueryResult = (queryResult: Promise<any>, date: Date) =>
+        MongoResponseParser.getInstance().parseDrillThroughFromCursor(queryResult, this._splitedQueries[this._curentQueryIndex]["fields"], this.CHUNK_SIZE, date);
 
     toJSON(response: any, nextpageToken?: string) {
         const jsonResponse: any = response;

@@ -11,6 +11,12 @@ import { SimpleCacheStrategie } from "./cacheStrategies/impl/SimpleCacheStrategi
 import { DataRetrievalInterface, RetrievalResult } from "./dataObject/DataRetrievalInterface";
 import { PagingInterface} from "../api/IDataAPI";
 import { RequestKey } from "../requests/register/RequestKey";
+import { ConfigManager } from "../config/ConfigManager";
+import { ConfigInterface } from "../config/ConfigInterface";
+import { AbstractDataObject } from "./dataObject/impl/AbstractDataObject";
+import { LoggingMessages } from "../utils/consts/LoggingMessages";
+//import { CachedDataInterface } from "./dataObject/CachedDataInterface";
+//import { AbstractDataObject } from "./dataObject/impl/AbstractDataObject";
 
 export class DataManager {
 
@@ -26,7 +32,9 @@ export class DataManager {
         this._queryExecutor = queryExecutor;
         const cacheStategie: ICacheStrategie = this.isProbabilisticCacheFlushEnabled 
             ? new ProbibalisticCacheStrategie() : new SimpleCacheStrategie();
-        this._cacheManager = new LocalDataCache(cacheStategie);
+        const currentConfig: ConfigInterface = ConfigManager.getInstance().currentConfig;
+        console.log(">>>>>>", currentConfig);
+        this._cacheManager = currentConfig.cacheEnabled ? new LocalDataCache(cacheStategie, ConfigManager.getInstance().currentConfig) : null;
         this._requestsRegister = new Register();
     }
 
@@ -57,23 +65,44 @@ export class DataManager {
             });
         }
         
-        return apiRequest.toJSON(retrievalResult.data, nextPageToken);      
+        return apiRequest.toJSON(retrievalResult.data, nextPageToken);
     }
 
     private async _getData(schema: APISchema, apiRequest: IApiRequest): Promise<DataRetrievalInterface> {
-        let data: any = null;
         let query: string = JSON.stringify(apiRequest.requestArgument.clientQuery);
+        let data: DataRetrievalInterface = this.getDataFromCache(query);
         //console.log(">>>>>>>query", query);
-        if (this._cacheManager.hasKey(query)) {
-            data = this._cacheManager.getCache(query);
-            console.log(">>>>>>>cache");
-        } else {
+
+        if (data === undefined) {
             data = await apiRequest.getData(schema, this._queryBuilder, this._queryExecutor);
-            this._cacheManager.setCache(query, data);
-            console.log(">>>>>>>query");
+            this.setDataToCache(query, <AbstractDataObject>data);
+            console.log(">>>>>", this.getCacheMemoryStatus());
         }
+        // if (this._cacheManager.hasKey(query)) {
+        //     data = this._cacheManager.getCache(query);
+        //     console.log(">>>>>>>cache");
+        // } else {
+        //     data = await apiRequest.getData(schema, this._queryBuilder, this._queryExecutor);
+        //     this._cacheManager.setCache(query, data);
+        //     console.log(">>>>>>", this._cacheManager.getCacheMemoryStatus());
+        // }
 
         return data;
+    }
+
+    private getDataFromCache(queryString: string): DataRetrievalInterface {
+        if (this._cacheManager === null) return null;
+        return this._cacheManager.getCache(queryString); 
+    }
+
+    private setDataToCache(queryString: string, data: AbstractDataObject): void {
+        if (this._cacheManager === null) return null;
+        this._cacheManager.setCache(queryString, data);
+    }
+
+    private getCacheMemoryStatus(): string {
+        if (this._cacheManager === null) return LoggingMessages.DISABLED_CACHE_MESSAGE;
+        return this._cacheManager.getCacheMemoryStatus();
     }
 }
 

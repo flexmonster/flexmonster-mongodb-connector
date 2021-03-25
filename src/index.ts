@@ -1,15 +1,17 @@
 import {Db} from 'mongodb';
 import {CollectionName, IDataAPI, PagingInterface} from './api/IDataAPI';
 import {MongoAPIManager} from './api/MongoAPIManager';
+import { ConfigInterface } from './config/ConfigInterface';
 
+export {ConfigInterface} from './config/ConfigInterface';
 export class MongoDataAPI {
 
     private _mongoAPIManager: IDataAPI;
 
     public readonly API_VERSION: string = "2.8.22";
 
-    constructor() {
-        this._mongoAPIManager = new MongoAPIManager();
+    constructor(config?: ConfigInterface) {
+        this._mongoAPIManager = new MongoAPIManager(config);
     }
 
     /**

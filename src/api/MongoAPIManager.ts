@@ -3,7 +3,6 @@ import {MongoQueryExecutor} from '../query/MongoQueryExecutor';
 import {MongoResponseParser} from '../parsers/MongoResponseParser';
 import {QueryBuilder} from '../query/builder/QueryBuilder';
 import {IDataAPI, CollectionName, PagingInterface} from './IDataAPI';
-import {RequestHandler} from '../handler/RequestHandler';
 import { APISchema } from '../schema/APISchema';
 import {IApiRequest} from "../requests/apiRequests/IApiRequest";
 import {MembersApiRequest} from "../requests/apiRequests/impl/MembersApiRequest";
@@ -13,6 +12,8 @@ import { FlatApiRequest } from '../requests/apiRequests/impl/FlatApiRequest';
 import { DataManager } from '../cache/DataManager';
 import { LocalDataCache } from '../cache/impl/LocalDataCache';
 import { IDataCache } from '../cache/IDataCache';
+import { ConfigInterface } from '../config/ConfigInterface';
+import { ConfigManager } from '../config/ConfigManager';
 
 export class MongoAPIManager implements IDataAPI{
 
@@ -21,17 +22,20 @@ export class MongoAPIManager implements IDataAPI{
     private _cacheManager: IDataCache<string, any>;
     private _dataManager: DataManager;
     private _queryBuilder: QueryBuilder;
-    private _dataLoader: RequestHandler;
+    //private _dataLoader: RequestHandler;
     private _schemaCache: {[index: string]: APISchema};
+    private _configManager: ConfigManager;
     
-    constructor() {
-        this._mongoQueryManager = new MongoQueryExecutor();
-        this._mongoResponseParser = MongoResponseParser.getInstance();
-        //this._cacheManager = LocalDataCache.getInstance();
-        this._queryBuilder = QueryBuilder.getInstance();
-        this._dataManager = new DataManager(this._queryBuilder, this._mongoQueryManager);
-        this._dataLoader = new RequestHandler(this._queryBuilder, this._mongoQueryManager, this._dataManager);
-        this._schemaCache = {};
+    constructor(config?: ConfigInterface) {
+
+        this.initializeComponents(config);
+        // this._mongoQueryManager = new MongoQueryExecutor();
+        // this._mongoResponseParser = MongoResponseParser.getInstance();
+        // //this._cacheManager = LocalDataCache.getInstance();
+        // this._queryBuilder = QueryBuilder.getInstance();
+        // this._dataManager = new DataManager(this._queryBuilder, this._mongoQueryManager);
+        // this._dataLoader = new RequestHandler(this._queryBuilder, this._mongoQueryManager, this._dataManager);
+        // this._schemaCache = {};
     }
 
     /**
@@ -63,8 +67,8 @@ export class MongoAPIManager implements IDataAPI{
     public async getMembers(dbo: Db, index: CollectionName, fieldObject: any, pagingObject: PagingInterface): Promise<any> {
         let apiRequest: IApiRequest = /*(pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
             ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-            :*/ new MembersApiRequest({index: index, fieldObject: fieldObject, clientQuery: {"members": fieldObject}})
-        return this._dataLoader.loadData(dbo, this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
+            :*/ new MembersApiRequest({index: index, fieldObject: fieldObject, clientQuery: {"members": fieldObject}, db: dbo})
+        return this._dataManager.getData(this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
     }
 
     /**
@@ -83,25 +87,36 @@ export class MongoAPIManager implements IDataAPI{
 
             let apiRequest: IApiRequest = /* (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                :*/ new AggregationApiRequest({index: index, clientQuery: query});
-            response = this._dataLoader.loadData(dbo, this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
+                :*/ new AggregationApiRequest({index: index, clientQuery: query, db: dbo});
+            response = this._dataManager.getData(this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
 
         } else if (query["aggs"] == null && query["fields"] != null) {//drill-through
 
             let apiRequest: IApiRequest = /* (pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                :*/ new DrillThroughApiRequest({index: index, clientQuery: query})
-            response = this._dataLoader.loadData(dbo, this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
+                :*/ new DrillThroughApiRequest({index: index, clientQuery: query, db: dbo})
+            response = this._dataManager.getData(this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
         } else if (query["aggs"] != null && query["fields"] != null) {// flat-form
 
             let apiRequest: IApiRequest = /*(pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
                 ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
-                :*/ new FlatApiRequest({index: index, clientQuery: query})
-            response = this._dataLoader.loadData(dbo, this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
+                :*/ new FlatApiRequest({index: index, clientQuery: query, db: dbo})
+            response = this._dataManager.getData(this.getIndexSchema(dbo.databaseName, index), apiRequest, pagingObject);
         }
 
         return response;
     }
+
+    private initializeComponents(config: ConfigInterface): void {
+        this._configManager = ConfigManager.getInstance(config);
+        this._mongoQueryManager = new MongoQueryExecutor();
+        this._mongoResponseParser = MongoResponseParser.getInstance();
+        //this._cacheManager = LocalDataCache.getInstance();
+        this._queryBuilder = QueryBuilder.getInstance();
+        this._dataManager = new DataManager(this._queryBuilder, this._mongoQueryManager);
+        //this._dataLoader = new RequestHandler(this._queryBuilder, this._mongoQueryManager, this._dataManager);
+        this._schemaCache = {};
+    } 
 
     private getIndexSchema(dbName: string, index: string): APISchema {
         return this._schemaCache[`${dbName}_${index}`];

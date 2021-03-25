@@ -1,20 +1,29 @@
 import { IDataCache } from "../IDataCache";
 import { ICacheStrategie } from "../cacheStrategies/ICacheStrategie";
+import { ConfigInterface } from "../../config/ConfigInterface";
+import { AbstractDataObject } from "../dataObject/impl/AbstractDataObject";
+import { DataRetrievalInterface } from "../dataObject/DataRetrievalInterface";
 
 export class LocalDataCache implements IDataCache<string, any> {
 
     private _cache: Map<string, CachedDataObject> = null;
-    private timeToLive: number = 0; //TTL for data objects in seconds, default 0 means we are not going to update cahce
-    private cacheStrategie: ICacheStrategie;
+    private timeToLive: number = 0; //TTL for data objects in minutes, default 0 means we are not going to update cache
+    private _cacheSizeLimit: number = 0; // mb
+    private _cacheStrategie: ICacheStrategie;
+    private _currentCacheSize: number = 0; //bytes
+    private readonly _garbageCollectingCoefficient: number = 0.6; // when matching cache size limit we keep 60% of data and remove 40%
 
-    constructor(cacheStrategie: ICacheStrategie) {
+    constructor(cacheStrategie: ICacheStrategie, config: ConfigInterface) {
         this._cache = new Map<string, any>();
-        this.cacheStrategie = cacheStrategie;
+        this._cacheStrategie = cacheStrategie;
+        this.timeToLive = config.cacheTimeToLive;
+        this._cacheSizeLimit = config.cacheMemoryLimit * 1024 * 1024;
+        this._currentCacheSize = 0;
     }
 
-    setTimeToLive(seconds: number): void {
-        if (seconds < 0) return;
-        this.timeToLive = seconds;
+    setTimeToLive(minutes: number): void {
+        if (minutes < 0) return;
+        this.timeToLive = minutes;
     }
 
     public hasKey(key: string): boolean {
@@ -22,16 +31,17 @@ export class LocalDataCache implements IDataCache<string, any> {
         return this._cache.has(key);
     }
 
-    public getCache(key: string): any {
+    public getCache(key: string): DataRetrievalInterface {
         if (key == null) throw new Error("Null key exception");
         let cachedDataObject: CachedDataObject = this._cache.get(key);
         
-        if (this.cacheStrategie.isCacheStaled(cachedDataObject, this.timeToLive)) {
-            cachedDataObject = null;
+        if (typeof cachedDataObject !== "undefined" && this._cacheStrategie.isCacheStaled(cachedDataObject, this.timeToLive)) {
+            // console.log(">>>>>stalled", ((new Date().getTime() - cachedDataObject.timeStamp) / (1000 * 60)));
+            cachedDataObject = undefined;
             this.removeFromCache(key);
         }
 
-        return cachedDataObject == null ? cachedDataObject : cachedDataObject.data;
+        return typeof cachedDataObject === "undefined" ? undefined : cachedDataObject.data;
     }
 
     // private isDataObjectStaled(cachedDataObject: CachedDataObject): boolean {
@@ -48,28 +58,98 @@ export class LocalDataCache implements IDataCache<string, any> {
 
     private removeFromCache(key: string): void {
         if (key == null) throw new Error("Null key exception");
-        this._cache.set(key, null);
+        const cachedItem: CachedDataObject = this._cache.get(key);
+        if (typeof cachedItem === "undefined") return;
+
+        this._cache.delete(key);
+        this._currentCacheSize-= cachedItem.dataMemorySize;
+        cachedItem.data = null;
+        return;
     }
 
-    public setCache(key: string, data: any) {
-        this._cache.set(key, {
-            timeStamp: new Date().getTime(),
-            data: data
-        });
+    public setCache(key: string, data: AbstractDataObject): void {
+        this._cache.set(key, 
+            {
+                data: data,
+                timeStamp: new Date().getTime(),
+                computationTime: data.computationTime,
+                dataMemorySize: data.dataMemorySize
+            }
+        );
+        this._currentCacheSize+= data.dataMemorySize;
+
+        if (this._cacheSizeLimit > 0 && this._currentCacheSize > this._cacheSizeLimit) this.collectGabbage();
+    }
+
+    private collectGabbage(): void {
+        console.log(">>>>>>", this.getCacheMemoryStatus());
+        const entries = this._cache.entries();
+        let entriesList: GarbageColletingItemsInterface[] = [];
+
+        for (const entry of entries) {
+            entriesList.push({
+                key: entry[0],
+                timeStamp: entry[1].timeStamp,
+                computationTime: entry[1].computationTime,
+                dataMemorySize: entry[1].dataMemorySize,
+                isCacheStaled: this._cacheStrategie.isCacheStaled(entry[1], this.timeToLive)
+            });
+        }
+
+        entriesList.sort(this.garbageItemsComparator);
+
+        let garbageCollectingItem: GarbageColletingItemsInterface = null;
+        while (this._cacheSizeLimit * this._garbageCollectingCoefficient <= this._currentCacheSize) {
+            garbageCollectingItem = entriesList.shift();
+            this.removeFromCache(garbageCollectingItem.key);
+        }
+
+        entriesList = null;
+        console.log(">>>>>>", this.getCacheMemoryStatus());
+    }
+
+    private garbageItemsComparator: (a: GarbageColletingItemsInterface, b: GarbageColletingItemsInterface) => number 
+        = (a: GarbageColletingItemsInterface, b: GarbageColletingItemsInterface) => {
+        const aScore: number = this.getGarbageItemScore(a);
+        const bScore: number = this.getGarbageItemScore(b);
+        return aScore - bScore;
+    }
+
+    private getGarbageItemScore(item: GarbageColletingItemsInterface): number {
+        if (item.isCacheStaled) return cacheScoreMetrics.StaledCache;
+        return item.computationTime;
     }
 
     public setCacheStrategie(cacheStrategie: ICacheStrategie) {
         if (cacheStrategie == null) return;
-        this.cacheStrategie = cacheStrategie;
+        this._cacheStrategie = cacheStrategie;
     }
 
     public clearCache(): void {
-        throw new Error("Method not implemented.");
+        this._cache.clear();
+        this._currentCacheSize = 0;
+    }
+
+    public getCacheMemoryStatus(): string {
+        return `Current cache size: ${this._currentCacheSize / (1024 * 1024)} MB`;
     }
 }
 
 export interface CachedDataObject {
-    data: any;
+    data: DataRetrievalInterface;
     timeStamp: number;//timeStamp for data added to cache (in miliseconds) 
-    computationTime?: number;
+    computationTime: number;
+    dataMemorySize: number;
+}
+
+export interface GarbageColletingItemsInterface {
+    key: string,
+    timeStamp: number;//timeStamp for data added to cache (in miliseconds) 
+    computationTime: number;
+    dataMemorySize: number;
+    isCacheStaled: boolean;
+}
+
+const cacheScoreMetrics = {
+    StaledCache: -300
 }

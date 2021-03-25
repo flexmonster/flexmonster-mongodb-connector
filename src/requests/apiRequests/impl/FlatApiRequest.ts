@@ -28,9 +28,9 @@ export class FlatApiRequest extends AbstractApiRequest {
         return mongoQuery;
     }
 
-    protected parseQueryResult(queryResultCursor: Promise<any>): Promise<any> {
+    protected parseQueryResult(queryResultCursor: Promise<any>, startDate: Date): Promise<any> {
         return MongoResponseParser.getInstance().parseFlatFromCursor(queryResultCursor,
-            this.requestArgument.clientQuery["fields"], this._splitedQueries);
+            this.requestArgument.clientQuery["fields"], this._splitedQueries, this.CHUNK_SIZE, startDate);
     }
     
     toJSON(response: any, nextpageToken?: string) {

@@ -11,7 +11,7 @@ export class MongoDataAPI {
     public readonly API_VERSION: string = "2.8.22";
 
     constructor(config?: ConfigInterface) {
-        this._mongoAPIManager = new MongoAPIManager(config);
+        this._mongoAPIManager = new MongoAPIManager(config, this.API_VERSION);
     }
 
     /**

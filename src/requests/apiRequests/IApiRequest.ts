@@ -7,7 +7,7 @@ import { APISchema } from "../../schema/APISchema";
 import { AbstractDataObject } from "../../cache/dataObject/impl/AbstractDataObject";
 
 export interface IApiRequest {
-    
+    loggingTemplate: string;
     requestArgument: IRequestArgument;
     getData(schema: APISchema, queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<AbstractDataObject>;
     moveNext(): void;

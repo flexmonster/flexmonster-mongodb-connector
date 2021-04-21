@@ -9,6 +9,7 @@ export class FlatApiRequest extends AbstractApiRequest {
 
     constructor(requestArgument: IRequestArgument) {
         super(requestArgument);
+        this._loggingTemplate = "flat view";
     }    
     
     protected buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema) {

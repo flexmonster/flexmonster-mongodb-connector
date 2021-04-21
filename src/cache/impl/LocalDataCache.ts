@@ -131,7 +131,7 @@ export class LocalDataCache implements IDataCache<string, any> {
     }
 
     public getCacheMemoryStatus(): string {
-        return `Current cache size: ${this._currentCacheSize / (1024 * 1024)} MB`;
+        return `Current cache size: ${(this._currentCacheSize / (1024 * 1024)).toFixed(2)} MB`;
     }
 }
 

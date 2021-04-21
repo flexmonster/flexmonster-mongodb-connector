@@ -8,6 +8,7 @@ export class MembersApiRequest extends AbstractApiRequest {
 
     constructor(requestArgument: IRequestArgument) {
         super(requestArgument);
+        this._loggingTemplate = "members";
     }
 
     protected buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema): any {

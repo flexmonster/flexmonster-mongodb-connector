@@ -10,10 +10,10 @@ import { AggregationApiRequest } from '../requests/apiRequests/impl/AggregationA
 import { DrillThroughApiRequest } from '../requests/apiRequests/impl/DrillThroughApiRequest';
 import { FlatApiRequest } from '../requests/apiRequests/impl/FlatApiRequest';
 import { DataManager } from '../cache/DataManager';
-import { LocalDataCache } from '../cache/impl/LocalDataCache';
 import { IDataCache } from '../cache/IDataCache';
 import { ConfigInterface } from '../config/ConfigInterface';
 import { ConfigManager } from '../config/ConfigManager';
+import { Logger } from '../utils/Logger';
 
 export class MongoAPIManager implements IDataAPI{
 
@@ -25,9 +25,11 @@ export class MongoAPIManager implements IDataAPI{
     //private _dataLoader: RequestHandler;
     private _schemaCache: {[index: string]: APISchema};
     private _configManager: ConfigManager;
+    private _apiVersion: string
     
-    constructor(config?: ConfigInterface) {
+    constructor(config: ConfigInterface, apiVersion: string) {
 
+        this._apiVersion = apiVersion;
         this.initializeComponents(config);
         // this._mongoQueryManager = new MongoQueryExecutor();
         // this._mongoResponseParser = MongoResponseParser.getInstance();
@@ -52,6 +54,9 @@ export class MongoAPIManager implements IDataAPI{
             //console.log(">>>>>>", index, dbo);
             let document: any = await this._mongoQueryManager.runShemaQuery(index);
             this.setIndexSchema(dbName, index ,this._mongoResponseParser.parseShemaFromDocument(document));
+            Logger.getInstance().log("Quering database to get schema")
+        } else {
+            Logger.getInstance().log("Getting schema from cache");
         }
         return this.getIndexSchema(dbName, index).toJSON();
     }
@@ -111,11 +116,15 @@ export class MongoAPIManager implements IDataAPI{
         this._configManager = ConfigManager.getInstance(config);
         this._mongoQueryManager = new MongoQueryExecutor();
         this._mongoResponseParser = MongoResponseParser.getInstance();
+        new Logger(this._configManager.currentConfig.logsEnabled);
+
         //this._cacheManager = LocalDataCache.getInstance();
         this._queryBuilder = QueryBuilder.getInstance();
         this._dataManager = new DataManager(this._queryBuilder, this._mongoQueryManager);
         //this._dataLoader = new RequestHandler(this._queryBuilder, this._mongoQueryManager, this._dataManager);
         this._schemaCache = {};
+        Logger.getInstance().log("Version:", this._apiVersion);
+        Logger.getInstance().log("Started with the following config", this._configManager);
     } 
 
     private getIndexSchema(dbName: string, index: string): APISchema {

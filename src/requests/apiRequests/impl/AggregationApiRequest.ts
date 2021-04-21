@@ -9,6 +9,7 @@ export class AggregationApiRequest extends AbstractApiRequest {
 
     constructor(requestArgument: IRequestArgument) {
         super(requestArgument);
+        this._loggingTemplate = "aggregations";
     }
 
     public buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema) {

@@ -4,6 +4,7 @@ import {IRequestArgument} from "../IRequestArgument";
 import {MongoResponseParser} from "../../../parsers/MongoResponseParser";
 import { AbstractApiRequest } from "./AbstractApiRequest";
 import { APISchema } from "../../../schema/APISchema";
+import { Logger } from "../../../utils/Logger";
 
 export class DrillThroughApiRequest extends AbstractApiRequest {
 
@@ -11,7 +12,7 @@ export class DrillThroughApiRequest extends AbstractApiRequest {
 
     constructor(requestArgument: IRequestArgument) {
         super(requestArgument);
-
+        this._loggingTemplate = "drill-through";
         this._clientSideLimitation = requestArgument.clientQuery["limit"] != null ? requestArgument.clientQuery["limit"] : 0;
     }
 
@@ -22,6 +23,8 @@ export class DrillThroughApiRequest extends AbstractApiRequest {
         // if ((this._currentPageIndex < this._clientSideLimitation && this._clientSideLimitation > 0) || this._clientSideLimitation <= 0) {
 
             const mongoQuery: any = this.buildMongoQuery(queryBuilder, schema);
+            Logger.getInstance().log(`Getting ${this.loggingTemplate} data`);
+            Logger.getInstance().log(`Generated pipeline query to MongoDB ${JSON.stringify(mongoQuery)}`);
 
             const startDate = new Date();
             const queryResultCursor: Promise<any> = this.executeQuery(queryExecutor, mongoQuery);

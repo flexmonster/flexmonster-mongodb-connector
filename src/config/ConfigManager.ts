@@ -53,4 +53,8 @@ export class ConfigManager {
     public get currentConfig(): ConfigInterface {
         return this._currentConfig;
     }
+
+    public toString(): string {
+        return JSON.stringify(this.currentConfig);
+    }
 }

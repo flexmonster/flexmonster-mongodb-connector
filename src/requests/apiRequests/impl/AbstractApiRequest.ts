@@ -5,7 +5,7 @@ import { MongoQueryExecutor } from "../../../query/MongoQueryExecutor";
 import { APISchema } from "../../../schema/APISchema";
 import { IQuery } from "../../../query/IQuery";
 import { Db } from "mongodb";
-import { Logger } from "../../../utils/Logger";
+import { LoggingManager } from "../../../logging/LoggingManager";
 
 export abstract class AbstractApiRequest implements IApiRequest{
 
@@ -35,8 +35,8 @@ export abstract class AbstractApiRequest implements IApiRequest{
     
     public async getData(schema: APISchema, queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
         const mongoQuery: any = this.buildMongoQuery(queryBuilder, schema);
-        Logger.getInstance().log(`Getting ${this.loggingTemplate} data`);
-        Logger.getInstance().log(`Generated pipeline query to MongoDB ${JSON.stringify(mongoQuery)}`);
+        LoggingManager.log(`Getting ${this.loggingTemplate} data`);
+        LoggingManager.log(`Generated pipeline query to MongoDB ${JSON.stringify(mongoQuery)}`);
 
         const startDate = new Date();
         const queryResultCursor: Promise<any> = this.executeQuery(queryExecutor, mongoQuery);

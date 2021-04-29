@@ -15,7 +15,7 @@ import { ConfigManager } from "../config/ConfigManager";
 import { ConfigInterface } from "../config/ConfigInterface";
 import { AbstractDataObject } from "./dataObject/impl/AbstractDataObject";
 import { LoggingMessages } from "../utils/consts/LoggingMessages";
-import { Logger } from "../utils/Logger";
+import { LoggingManager } from "../logging/LoggingManager";
 //import { CachedDataInterface } from "./dataObject/CachedDataInterface";
 //import { AbstractDataObject } from "./dataObject/impl/AbstractDataObject";
 
@@ -78,33 +78,25 @@ export class DataManager {
             data = await apiRequest.getData(schema, this._queryBuilder, this._queryExecutor);
             this.setDataToCache(query, <AbstractDataObject>data);
             console.log(">>>>>", this.getCacheMemoryStatus());
-            
+
             if (ConfigManager.getInstance().currentConfig.cacheEnabled) {
-                Logger.getInstance().log(`Putting ${apiRequest.loggingTemplate} data to cache`);
-                Logger.getInstance().log(this.getCacheMemoryStatus());
+                LoggingManager.log(`Putting ${apiRequest.loggingTemplate} data to cache`);
+                LoggingManager.log(this.getCacheMemoryStatus());
             }
         } else {
-            Logger.getInstance().log(`Getting ${apiRequest.loggingTemplate} data from cache`);
+            LoggingManager.log(`Getting ${apiRequest.loggingTemplate} data from cache`);
         }
-        // if (this._cacheManager.hasKey(query)) {
-        //     data = this._cacheManager.getCache(query);
-        //     console.log(">>>>>>>cache");
-        // } else {
-        //     data = await apiRequest.getData(schema, this._queryBuilder, this._queryExecutor);
-        //     this._cacheManager.setCache(query, data);
-        //     console.log(">>>>>>", this._cacheManager.getCacheMemoryStatus());
-        // }
 
         return data;
     }
 
     private getDataFromCache(queryString: string): DataRetrievalInterface {
-        if (this._cacheManager === null) return null;
+        if (this._cacheManager === null) return undefined;
         return this._cacheManager.getCache(queryString); 
     }
 
     private setDataToCache(queryString: string, data: AbstractDataObject): void {
-        if (this._cacheManager === null) return null;
+        if (this._cacheManager === null) return undefined;
         this._cacheManager.setCache(queryString, data);
     }
 

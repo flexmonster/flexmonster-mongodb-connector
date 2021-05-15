@@ -16,13 +16,12 @@ export class DrillThroughApiRequest extends AbstractApiRequest {
         this._clientSideLimitation = requestArgument.clientQuery["limit"] != null ? requestArgument.clientQuery["limit"] : 0;
     }
 
-    public async getData(schema: APISchema, queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
+    public async getData(queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
 
         let data: any[] = [];
 
         // if ((this._currentPageIndex < this._clientSideLimitation && this._clientSideLimitation > 0) || this._clientSideLimitation <= 0) {
-
-            const mongoQuery: any = this.buildMongoQuery(queryBuilder, schema);
+            const mongoQuery: any = this.buildMongoQuery(queryBuilder, this._schema);
             LoggingManager.log(`Getting ${this.loggingTemplate} data`);
             LoggingManager.log(`Generated pipeline query to MongoDB ${JSON.stringify(mongoQuery)}`);
 

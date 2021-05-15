@@ -8,6 +8,7 @@ import { IQuery } from '../query/IQuery';
 import { ArrayDataObject } from '../cache/dataObject/impl/ArrayDataObject';
 import { FlatResultDataObject } from '../cache/dataObject/impl/FlatRequestDataObject';
 import { MemoryCalculator, MemoryConstants } from '../utils/MemoryCalculator';
+import { AggregationApiRequest } from '../requests/apiRequests/impl/AggregationApiRequest';
 
 export class MongoResponseParser {
 
@@ -58,26 +59,38 @@ export class MongoResponseParser {
         };
     }
 
-    public parseCalculationsFromCursor(cursor: Promise<any>, query: IQuery[], dataChunkSize: number, startDate: Date = null): Promise<ArrayDataObject> {
+    public parseCalculationsFromCursor(cursor: Promise<any>, query: IQuery[], dataChunkSize: number, startDate: Date = null,
+        aggregationApiRequest: AggregationApiRequest): Promise<ArrayDataObject> {
         return new Promise((resolve, reject) => {
-            cursor.then(async (documents: any) => {
-                const parsingResult = await this.parseAggregations(documents, query, dataChunkSize, startDate);
-                resolve(new ArrayDataObject(parsingResult.result, parsingResult.startDate, parsingResult.memorySize));
+            cursor.then(async (documents: Cursor) => {
+                const parsingResult = await this.parseAggregations(documents, query, dataChunkSize, startDate, aggregationApiRequest);
+                const dataObject = new ArrayDataObject(parsingResult.result, parsingResult.startDate, parsingResult.memorySize);
+                // await documents.forEach((data: any) => {
+                //     console.log(">>>>", data);
+                // });
+                
+                //console.log(">>>", await documents.toArray());
+                resolve(dataObject);
             });
         });
     }
 
-    private async parseAggregations(documents: Cursor, queries: IQuery[], dataChunkSize: number, startDate: Date = null): Promise<any> {
-        //const aggregationApiRequest: AggregationApiRequest = new 
-        let startParse: Date = new Date();
+    
+
+    private async parseAggregations(documents: Cursor, queries: IQuery[], dataChunkSize: number, startDate: Date = null, 
+        aggregationApiRequest: AggregationApiRequest): Promise<any> {
+
         let parsedData: any[] = [];
         let dataChunk: any[] = [];
         let keysParsed: any = null;
         let valuesParsed: any = null;
         let dataMemorySize: number = 0;
-        if (startDate != null) console.log(">>>>>>>query", new Date().getTime() - startDate.getTime());
+        let parseStart: Date = null;
+
         await documents.forEach((data: any) => {
             //console.log(">>>>>>", data);
+            parseStart = new Date();
+            aggregationApiRequest.updateLoadingStatus(data);
             let queryDefinition: string = null;
             for (let i = 0; i < queries.length; i++) {
                 queryDefinition = queries[i].definition;
@@ -100,8 +113,8 @@ export class MongoResponseParser {
             parsedData.push(dataChunk);
             dataMemorySize += 4 * MemoryConstants.REFERENCE;
         });
-        if (startDate != null) console.log(">>>>>>>aggregation", new Date().getTime() - startDate.getTime());
-        //console.log(">>>>>>>>parsing", new Date().getTime() - startParse.getTime());
+        console.log(">>>>>>>allTime", new Date().getTime() - startDate.getTime());
+        console.log(">>>>>>>>just parsing", new Date().getTime() - parseStart.getTime());
         return {
             startDate: startDate,
             result: parsedData,

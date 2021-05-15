@@ -15,7 +15,7 @@ export class ArrayDataObject extends AbstractDataObject {//implements DataRetrie
         this.dataMemorySize = dataMemorySize;
     }
 
-    public getChunk(iterator: IterableIterator<number>, chunkSize: number): RetrievalResult {
+    public getChunk(iterator: IterableIterator<number>): RetrievalResult {
         let item = iterator.next();
         let chunk = this.data[item.value];
         let isFinished = item.done || item.value + 1 === this.data.length;
@@ -30,7 +30,16 @@ export class ArrayDataObject extends AbstractDataObject {//implements DataRetrie
         return this.data.keys();
     }
 
-    public push(dataChunk: any[]): void {
+    public push(dataChunk: any[], dataMemorySize?: number): void {
         this.data.push(dataChunk);
-    }    
+        if (dataMemorySize !== undefined) this.dataMemorySize += dataMemorySize;
+    }
+
+    public getNumberOfItems(): number {
+        let numberOfMembers: number = 0;
+        for (let i: number = 0; i < this.data.length; i++) {
+            numberOfMembers+= this.data[i].length;
+        }
+        return numberOfMembers;
+    }
 }

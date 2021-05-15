@@ -3,6 +3,7 @@ import {QueryBuilder} from "../../../query/builder/QueryBuilder";
 import {MongoResponseParser} from "../../../parsers/MongoResponseParser";
 import { AbstractApiRequest } from "./AbstractApiRequest";
 import { APISchema } from "../../../schema/APISchema";
+import { ArrayDataObject } from "../../../cache/dataObject/impl/ArrayDataObject";
 
 export class MembersApiRequest extends AbstractApiRequest {
 
@@ -18,8 +19,16 @@ export class MembersApiRequest extends AbstractApiRequest {
         return mongoQuery;
     };
 
-    protected parseQueryResult = (queryResult: Promise<any>, startDate: Date) => 
-        MongoResponseParser.getInstance().parseMembersFromCursor(queryResult, this.requestArgument.fieldObject, this.CHUNK_SIZE, startDate);
+    protected parseQueryResult = async (queryResult: Promise<any>, startDate: Date) => {
+        const parsedData = await MongoResponseParser.getInstance().parseMembersFromCursor(queryResult, this.requestArgument.fieldObject, this.CHUNK_SIZE, startDate);
+        this.storeMembersNumber(parsedData.getNumberOfItems(), this._schema);
+        return parsedData;
+    }
+
+    private storeMembersNumber(numberOfMembers: number, schema: APISchema): void {
+        schema.fields.get(this.requestArgument.fieldObject.uniqueName).fieldStats.distinctMembersNumber = numberOfMembers;
+        return;
+    }
 
     public toJSON(response: any, nextPageToken: string): any {
         const jsonResponse: any = {

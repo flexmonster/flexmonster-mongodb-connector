@@ -16,7 +16,7 @@ export class FlatResultDataObject extends AbstractDataObject { //implements Data
         this.dataMemorySize = dataMemorySize;
     }
 
-    getChunk(iterator: IterableIterator<number>, chunkSize: number): RetrievalResult {
+    getChunk(iterator: IterableIterator<number>): RetrievalResult {
         let iteratorItem = iterator.next();
         let isFinished = iteratorItem.done || iteratorItem.value + 1 === this.data.hits.length;
         

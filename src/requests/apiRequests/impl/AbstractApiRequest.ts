@@ -14,11 +14,13 @@ export abstract class AbstractApiRequest implements IApiRequest{
     protected _curentQueryIndex: number;
     protected _currentPageIndex: number;
     protected _db: Db;
-    protected CHUNK_SIZE: number = 50000;
+    protected CHUNK_SIZE: number = 25000;
     protected _loggingTemplate: string;
+    protected _schema: APISchema;
 
     constructor(requestArgument: IRequestArgument) {
         this._requestArgument = requestArgument;
+        this._schema = requestArgument.schema;
         this._splitedQueries = this._splitQuery(this._requestArgument.clientQuery);
         this._db = requestArgument.db;
         this._curentQueryIndex = 0;
@@ -33,8 +35,8 @@ export abstract class AbstractApiRequest implements IApiRequest{
         return this._loggingTemplate;
     }
     
-    public async getData(schema: APISchema, queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
-        const mongoQuery: any = this.buildMongoQuery(queryBuilder, schema);
+    public async getData(queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
+        const mongoQuery: any = this.buildMongoQuery(queryBuilder, this._schema);
         LoggingManager.log(`Getting ${this.loggingTemplate} data`);
         LoggingManager.log(`Generated pipeline query to MongoDB ${JSON.stringify(mongoQuery)}`);
 
@@ -74,4 +76,7 @@ export abstract class AbstractApiRequest implements IApiRequest{
     protected abstract buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema): any;
     protected abstract parseQueryResult(queryResultCursor: Promise<any>, date: Date): Promise<any>;
 
+    public dispose(): void {
+
+    }
 }

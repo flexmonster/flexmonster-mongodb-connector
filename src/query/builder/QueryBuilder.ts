@@ -137,33 +137,35 @@ export class QueryBuilder {
         return pipeline;
     }
 
-    public buildAggregationPipelineFacet(query: any | IQuery[], schema: APISchema) {
-        if (query == null) throw new Error("Illegal argument exception. Query cannot be null");
+    public buildAggregationPipelineFacet(queries: any | IQuery[], schema: APISchema, templateQuery?: IQuery) {
+        if (queries == null) throw new Error("Illegal argument exception. Query cannot be null");
         const pipeline: any[] = [];
-        const intersectionQuery: IQuery = (<IQuery[]>query).shift();
+        const intersectionQuery: IQuery = templateQuery === undefined ? (<IQuery[]>queries).shift() : templateQuery;
+
+        pipeline.push({
+            [MongoPipelineStages.MATCH]: this._filterQueryBuilder.buildFilterQuery(intersectionQuery.clientQuery["filter"], schema)
+        });
+
 
         pipeline.push({
             [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(intersectionQuery.clientQuery, schema)
         });
 
-        if (intersectionQuery.clientQuery["filter"] != null) {
-            pipeline.push({
-                "$match": this._filterQueryBuilder.buildFilterQuery(intersectionQuery.clientQuery["filter"], schema)
-            });
+        // if (intersectionQuery.clientQuery["filter"] != null) {
 
-            //need to test performance with and without this block
-            const queryCopy: any = JSON.parse(JSON.stringify(intersectionQuery.clientQuery)); 
-            delete queryCopy["filter"]; //query with no filter;    
-            pipeline.push({
-                [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(queryCopy, schema)
-            });
-        }
+        //     //need to test performance with and without this block
+        //     const queryCopy: any = JSON.parse(JSON.stringify(intersectionQuery.clientQuery)); 
+        //     delete queryCopy["filter"]; //query with no filter;    
+        //     pipeline.push({
+        //         [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(queryCopy, schema)
+        //     });
+        // }
 
         if (intersectionQuery.clientQuery["aggs"] != null) {
             const facetStage: any = {};
             
-            for (let i = 0; i < query.length; i++) {
-                facetStage[query[i].definition] = [this._groupingQueryBuilder.buildGroupStage(query[i].clientQuery["aggs"])/*, {"$limit": 100000}*/];
+            for (let i = 0; i < queries.length; i++) {
+                facetStage[queries[i].definition] = [this._groupingQueryBuilder.buildGroupStage(queries[i].clientQuery["aggs"])];
             }
 
             pipeline.push({

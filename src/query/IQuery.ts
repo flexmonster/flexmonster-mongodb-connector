@@ -5,8 +5,9 @@ export interface IQuery {
 }
 
 export interface QueryStats {
-    expectedNumberOfRecords: number;
-    loadedNumberOfRecords: number;
-    isAllQueryDataLoaded: false;
-    intersectionList: string[]; //the list of uniqueNames
+    expectedNumberOfRecords?: number;
+    sumOfLoadedRecords?: number;
+    loadedNumberOfRecords?: number;
+    chunkToLoad?: number;
+    isAllQueryDataLoaded?: false;
 }

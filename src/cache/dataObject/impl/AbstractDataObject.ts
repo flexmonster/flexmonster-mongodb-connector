@@ -6,7 +6,7 @@ export abstract class AbstractDataObject implements DataRetrievalInterface, Cach
     computationTime: number;
     dataMemorySize: number;
 
-    public getChunk(iterator: IterableIterator<any>, chunkSize: number): RetrievalResult {
+    public getChunk(iterator: IterableIterator<any>): RetrievalResult {
         throw new Error("Method not implemented.");
     }
     

@@ -17,7 +17,7 @@ export class MapDataObject implements DataRetrievalInterface {
         return this.data.keys();
     }
 
-    public getChunk(iterator: IterableIterator<string>, chunkSize: number): RetrievalResult {
+    public getChunk(iterator: IterableIterator<string>, chunkSize?: number): RetrievalResult {
         let dataChunk: any[] = null;
         let isFinished = false;
         if (chunkSize >= this.data.size) {

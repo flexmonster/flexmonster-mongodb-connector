@@ -1,5 +1,7 @@
+import { IApiRequest } from "../../requests/apiRequests/IApiRequest";
+
 export interface DataRetrievalInterface {
-    getChunk(iterator: IterableIterator<any>, chunkSize: number): RetrievalResult;
+    getChunk(iterator: IterableIterator<any>): RetrievalResult;
     getIterationKeys(): IterableIterator<any>;
 }
 

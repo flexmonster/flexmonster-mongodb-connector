@@ -16,6 +16,8 @@ import { ConfigInterface } from "../config/ConfigInterface";
 import { AbstractDataObject } from "./dataObject/impl/AbstractDataObject";
 import { LoggingMessages } from "../utils/consts/LoggingMessages";
 import { LoggingManager } from "../logging/LoggingManager";
+import { IRequestArgument } from "../requests/apiRequests/IRequestArgument";
+import { RequestFactory } from "../requests/requestsFactory.ts/RequestsFactory";
 //import { CachedDataInterface } from "./dataObject/CachedDataInterface";
 //import { AbstractDataObject } from "./dataObject/impl/AbstractDataObject";
 
@@ -26,7 +28,7 @@ export class DataManager {
     private _cacheManager: IDataCache<string, any>;
     private isProbabilisticCacheFlushEnabled: boolean = true;
     private _requestsRegister: Register<string, DataIterationInterface>;
-    private readonly CHUNK_SIZE: number = 50000;
+    //private readonly CHUNK_SIZE: number = 50000;
 
     constructor(queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor) {
         this._queryBuilder = queryBuilder;
@@ -39,43 +41,47 @@ export class DataManager {
         this._requestsRegister = new Register();
     }
 
-    public async getData(schema: APISchema, apiRequest: IApiRequest, currentPage: PagingInterface): Promise<any> {
+    public async getData(requestArgument: IRequestArgument, requestType: string, currentPage: PagingInterface): Promise<any> {
+
         if (currentPage.pageToken != null) {
-            const dataIterator = this._requestsRegister.deleteItem(currentPage.pageToken);
-            const retrievalResult: RetrievalResult = dataIterator.data.getChunk(dataIterator.iterator, this.CHUNK_SIZE);
+            const registerItem = this._requestsRegister.deleteItem(currentPage.pageToken);
+            const retrievalResult: RetrievalResult = registerItem.data.getChunk(registerItem.iterator);
             let nextPageToken: string = null;
 
             if (!retrievalResult.isFinished) {
-                nextPageToken = new RequestKey(apiRequest.requestArgument.clientQuery).hash();
-                this._requestsRegister.addItem(nextPageToken, dataIterator)
+                nextPageToken = new RequestKey(registerItem.apiRequest.requestArgument.clientQuery).hash();
+                this._requestsRegister.addItem(nextPageToken, registerItem)
             }
 
-            return apiRequest.toJSON(retrievalResult.data, nextPageToken);
+            return registerItem.apiRequest.toJSON(retrievalResult.data, nextPageToken);
         }
 
-        const data: DataRetrievalInterface = await this._getData(schema, apiRequest);
+        //console.log(">>>>>>", RequestFactory.name, RequestFactory.prototype);
+        const apiRequest: IApiRequest = RequestFactory.createRequestInstance(requestArgument, requestType);
+        const data: DataRetrievalInterface = await this._getData(apiRequest);
         const iterator: IterableIterator<any> = data.getIterationKeys();
-        const retrievalResult: RetrievalResult = data.getChunk(iterator, this.CHUNK_SIZE);
+        const retrievalResult: RetrievalResult = data.getChunk(iterator);
         let nextPageToken: string = null;
 
         if (!retrievalResult.isFinished) {
             nextPageToken = new RequestKey(apiRequest.requestArgument.clientQuery).hash();
             this._requestsRegister.addItem(nextPageToken, {
                 data: data,
-                iterator: iterator
+                iterator: iterator,
+                apiRequest: apiRequest
             });
         }
         
         return apiRequest.toJSON(retrievalResult.data, nextPageToken);
     }
 
-    private async _getData(schema: APISchema, apiRequest: IApiRequest): Promise<DataRetrievalInterface> {
+    private async _getData(apiRequest: IApiRequest): Promise<DataRetrievalInterface> {
         let query: string = JSON.stringify(apiRequest.requestArgument.clientQuery);
         let data: DataRetrievalInterface = this.getDataFromCache(query);
-        //console.log(">>>>>>>query", query);
+        LoggingManager.log(`Client query: ${JSON.stringify(apiRequest.requestArgument.clientQuery)}`);
 
         if (data === undefined) {
-            data = await apiRequest.getData(schema, this._queryBuilder, this._queryExecutor);
+            data = await apiRequest.getData(this._queryBuilder, this._queryExecutor);
             this.setDataToCache(query, <AbstractDataObject>data);
             console.log(">>>>>", this.getCacheMemoryStatus());
 
@@ -109,4 +115,5 @@ export class DataManager {
 export interface DataIterationInterface {
     data: DataRetrievalInterface;
     iterator: IterableIterator<any>;
+    apiRequest?: IApiRequest;
 }

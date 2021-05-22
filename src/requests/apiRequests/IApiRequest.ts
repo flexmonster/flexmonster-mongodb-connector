@@ -10,8 +10,8 @@ export interface IApiRequest {
     loggingTemplate: string;
     requestArgument: IRequestArgument;
     getData(queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<AbstractDataObject>;
-    moveNext(): void;
-    isFinished(): boolean;
+    //moveNext(): void;
+    //isFinished(): boolean;
     toJSON(response: any, nextpageToken?: string): any;
     
 }

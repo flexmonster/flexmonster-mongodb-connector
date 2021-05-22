@@ -1,8 +1,7 @@
-import { IApiRequest } from "../../requests/apiRequests/IApiRequest";
-
 export interface DataRetrievalInterface {
-    getChunk(iterator: IterableIterator<any>): RetrievalResult;
-    getIterationKeys(): IterableIterator<any>;
+    getChunk(iterator: Iterator<any>): RetrievalResult;
+    getChunkAsync(iterator: Iterator<number>): Promise<RetrievalResult>;
+    getIterationKeys(): Iterator<any>;
 }
 
 export interface RetrievalResult {

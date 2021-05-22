@@ -1,7 +1,7 @@
 import { DataRetrievalInterface, RetrievalResult } from "../DataRetrievalInterface";
 import { MemoryCalculator } from "../../../utils/MemoryCalculator";
 
-export class MapDataObject implements DataRetrievalInterface {
+export class MapDataObject {
 
     private data: Map<string, any>;
     public dataSize: number; // dataSize in bytes

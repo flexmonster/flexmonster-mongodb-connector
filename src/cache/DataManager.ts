@@ -1,7 +1,6 @@
 import { QueryBuilder } from "../query/builder/QueryBuilder";
 import { MongoQueryExecutor } from "../query/MongoQueryExecutor";
 import { LocalDataCache } from "./impl/LocalDataCache";
-import { APISchema } from "../schema/APISchema";
 import { IApiRequest } from "../requests/apiRequests/IApiRequest";
 import { IDataCache } from "./IDataCache";
 import { Register } from "../requests/register/Register";
@@ -18,6 +17,8 @@ import { LoggingMessages } from "../utils/consts/LoggingMessages";
 import { LoggingManager } from "../logging/LoggingManager";
 import { IRequestArgument } from "../requests/apiRequests/IRequestArgument";
 import { RequestFactory } from "../requests/requestsFactory.ts/RequestsFactory";
+import { ArrayDataObject } from "./dataObject/impl/ArrayDataObject";
+import { SimpleNumericIterator } from "./customIterators/SimpleNumericIterator";
 //import { CachedDataInterface } from "./dataObject/CachedDataInterface";
 //import { AbstractDataObject } from "./dataObject/impl/AbstractDataObject";
 
@@ -36,7 +37,6 @@ export class DataManager {
         const cacheStategie: ICacheStrategie = this.isProbabilisticCacheFlushEnabled 
             ? new ProbibalisticCacheStrategie() : new SimpleCacheStrategie();
         const currentConfig: ConfigInterface = ConfigManager.getInstance().currentConfig;
-        console.log(">>>>>>", currentConfig);
         this._cacheManager = currentConfig.cacheEnabled ? new LocalDataCache(cacheStategie, ConfigManager.getInstance().currentConfig) : null;
         this._requestsRegister = new Register();
     }
@@ -45,7 +45,7 @@ export class DataManager {
 
         if (currentPage.pageToken != null) {
             const registerItem = this._requestsRegister.deleteItem(currentPage.pageToken);
-            const retrievalResult: RetrievalResult = registerItem.data.getChunk(registerItem.iterator);
+            const retrievalResult: RetrievalResult = await this.getDataChunk(registerItem.data, registerItem.iterator); //registerItem.data.getChunk(registerItem.iterator);
             let nextPageToken: string = null;
 
             if (!retrievalResult.isFinished) {
@@ -56,17 +56,16 @@ export class DataManager {
             return registerItem.apiRequest.toJSON(retrievalResult.data, nextPageToken);
         }
 
-        //console.log(">>>>>>", RequestFactory.name, RequestFactory.prototype);
         const apiRequest: IApiRequest = RequestFactory.createRequestInstance(requestArgument, requestType);
-        const data: DataRetrievalInterface = await this._getData(apiRequest);
-        const iterator: IterableIterator<any> = data.getIterationKeys();
-        const retrievalResult: RetrievalResult = data.getChunk(iterator);
+        const dataInstance: AbstractDataObject = await this._getData(apiRequest);
+        const iterator: Iterator<any> = this.getIterator(dataInstance);//dataInstance.getIterationKeys();
+        const retrievalResult: RetrievalResult = await this.getDataChunk(dataInstance, iterator); //await data.getChunk(iterator);
         let nextPageToken: string = null;
 
         if (!retrievalResult.isFinished) {
             nextPageToken = new RequestKey(apiRequest.requestArgument.clientQuery).hash();
             this._requestsRegister.addItem(nextPageToken, {
-                data: data,
+                data: dataInstance,
                 iterator: iterator,
                 apiRequest: apiRequest
             });
@@ -75,15 +74,14 @@ export class DataManager {
         return apiRequest.toJSON(retrievalResult.data, nextPageToken);
     }
 
-    private async _getData(apiRequest: IApiRequest): Promise<DataRetrievalInterface> {
+    private async _getData(apiRequest: IApiRequest): Promise<AbstractDataObject> {
         let query: string = JSON.stringify(apiRequest.requestArgument.clientQuery);
-        let data: DataRetrievalInterface = this.getDataFromCache(query);
+        let data: AbstractDataObject = this.getDataFromCache(query);
         LoggingManager.log(`Client query: ${JSON.stringify(apiRequest.requestArgument.clientQuery)}`);
 
         if (data === undefined) {
             data = await apiRequest.getData(this._queryBuilder, this._queryExecutor);
             this.setDataToCache(query, <AbstractDataObject>data);
-            console.log(">>>>>", this.getCacheMemoryStatus());
 
             if (ConfigManager.getInstance().currentConfig.cacheEnabled) {
                 LoggingManager.log(`Putting ${apiRequest.loggingTemplate} data to cache`);
@@ -96,7 +94,7 @@ export class DataManager {
         return data;
     }
 
-    private getDataFromCache(queryString: string): DataRetrievalInterface {
+    private getDataFromCache(queryString: string): AbstractDataObject {
         if (this._cacheManager === null) return undefined;
         return this._cacheManager.getCache(queryString); 
     }
@@ -110,10 +108,24 @@ export class DataManager {
         if (this._cacheManager === null) return LoggingMessages.DISABLED_CACHE_MESSAGE;
         return this._cacheManager.getCacheMemoryStatus();
     }
+
+    private getIterator(dataInstance: AbstractDataObject): Iterator<any> {
+        if (dataInstance instanceof ArrayDataObject) {
+            return dataInstance.isCompleted ? dataInstance.getIterationKeys() : new SimpleNumericIterator(); 
+        }
+        return dataInstance.getIterationKeys();
+    }
+
+    private async getDataChunk(dataInstance: DataRetrievalInterface, iterator: Iterator<any>): Promise<RetrievalResult> {
+        if (dataInstance instanceof ArrayDataObject) {
+            return dataInstance.isCompleted ? dataInstance.getChunk(iterator) : dataInstance.getChunkAsync(iterator);
+        }
+        return dataInstance.getChunk(iterator);
+    }
 }
 
 export interface DataIterationInterface {
     data: DataRetrievalInterface;
-    iterator: IterableIterator<any>;
+    iterator: Iterator<any>;
     apiRequest?: IApiRequest;
 }

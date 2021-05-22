@@ -11,7 +11,7 @@ export class LocalDataCache implements IDataCache<string, any> {
     private _cacheSizeLimit: number = 0; // mb
     private _cacheStrategie: ICacheStrategie;
     private _currentCacheSize: number = 0; //bytes
-    private readonly _garbageCollectingCoefficient: number = 0.6; // when matching cache size limit we keep 60% of data and remove 40%
+    private readonly _garbageCollectingCoefficient: number = 0.6; // when reaching cache size limit we keep 60% of data and remove 40%
 
     constructor(cacheStrategie: ICacheStrategie, config: ConfigInterface) {
         this._cache = new Map<string, any>();
@@ -119,6 +119,8 @@ export class LocalDataCache implements IDataCache<string, any> {
         if (item.isCacheStaled) return cacheScoreMetrics.StaledCache;
         return item.computationTime;
     }
+
+    //private refreshMemory(): void {}
 
     public setCacheStrategie(cacheStrategie: ICacheStrategie) {
         if (cacheStrategie == null) return;

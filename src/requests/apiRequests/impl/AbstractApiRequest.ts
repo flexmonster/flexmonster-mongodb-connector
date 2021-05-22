@@ -14,7 +14,7 @@ export abstract class AbstractApiRequest implements IApiRequest{
     protected _curentQueryIndex: number;
     protected _currentPageIndex: number;
     protected _db: Db;
-    protected CHUNK_SIZE: number = 25000;
+    protected CHUNK_SIZE: number = 30000;
     protected _loggingTemplate: string;
     protected _schema: APISchema;
 
@@ -34,7 +34,7 @@ export abstract class AbstractApiRequest implements IApiRequest{
     public get loggingTemplate(): string {
         return this._loggingTemplate;
     }
-    
+
     public async getData(queryBuilder: QueryBuilder, queryExecutor: MongoQueryExecutor): Promise<any> {
         const mongoQuery: any = this.buildMongoQuery(queryBuilder, this._schema);
         LoggingManager.log(`Getting ${this.loggingTemplate} data`);
@@ -48,14 +48,14 @@ export abstract class AbstractApiRequest implements IApiRequest{
         return data;
     }
 
-    public moveNext(): void {
-        this._curentQueryIndex++;
-        this._currentPageIndex = 0;    
-    }
+    // public moveNext(): void {
+    //     this._curentQueryIndex++;
+    //     this._currentPageIndex = 0;    
+    // }
 
-    public isFinished(): boolean {
-        return this._splitedQueries.length <= this._curentQueryIndex;
-    }
+    // public isFinished(): boolean {
+    //     return this._splitedQueries.length <= this._curentQueryIndex;
+    // }
 
     protected _splitQuery(query: any): any[] {
         const splitedQuery: any[] = [];

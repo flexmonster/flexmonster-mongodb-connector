@@ -64,18 +64,10 @@ export class MongoResponseParser {
         return new Promise((resolve, reject) => {
             cursor.then(async (documents: Cursor) => {
                 const parsingResult = await this.parseAggregations(documents, query, dataChunkSize, startDate, aggregationApiRequest);
-                const dataObject = new ArrayDataObject(parsingResult.result, parsingResult.startDate, parsingResult.memorySize);
-                // await documents.forEach((data: any) => {
-                //     console.log(">>>>", data);
-                // });
-                
-                //console.log(">>>", await documents.toArray());
-                resolve(dataObject);
+                resolve(new ArrayDataObject(parsingResult.result, parsingResult.startDate, parsingResult.memorySize));
             });
         });
     }
-
-    
 
     private async parseAggregations(documents: Cursor, queries: IQuery[], dataChunkSize: number, startDate: Date = null, 
         aggregationApiRequest: AggregationApiRequest): Promise<any> {

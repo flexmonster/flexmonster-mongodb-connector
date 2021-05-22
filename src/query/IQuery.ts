@@ -9,5 +9,5 @@ export interface QueryStats {
     sumOfLoadedRecords?: number;
     loadedNumberOfRecords?: number;
     chunkToLoad?: number;
-    isAllQueryDataLoaded?: false;
+    isAllQueryDataLoaded?: boolean;
 }

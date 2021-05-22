@@ -137,35 +137,36 @@ export class QueryBuilder {
         return pipeline;
     }
 
-    public buildAggregationPipelineFacet(queries: any | IQuery[], schema: APISchema, templateQuery?: IQuery) {
+    public buildAggregationPipelineFacet(queries: any | IQuery[], schema: APISchema, templateQuery?: IQuery, isPaginated?: boolean) {
         if (queries == null) throw new Error("Illegal argument exception. Query cannot be null");
         const pipeline: any[] = [];
         const intersectionQuery: IQuery = templateQuery === undefined ? (<IQuery[]>queries).shift() : templateQuery;
 
-        pipeline.push({
-            [MongoPipelineStages.MATCH]: this._filterQueryBuilder.buildFilterQuery(intersectionQuery.clientQuery["filter"], schema)
-        });
-
+        if (intersectionQuery.clientQuery["filter"] != null) {
+            pipeline.push({
+                [MongoPipelineStages.MATCH]: this._filterQueryBuilder.buildFilterQuery(intersectionQuery.clientQuery["filter"], schema)
+            });
+        }
 
         pipeline.push({
             [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(intersectionQuery.clientQuery, schema)
         });
 
-        // if (intersectionQuery.clientQuery["filter"] != null) {
-
-        //     //need to test performance with and without this block
-        //     const queryCopy: any = JSON.parse(JSON.stringify(intersectionQuery.clientQuery)); 
-        //     delete queryCopy["filter"]; //query with no filter;    
-        //     pipeline.push({
-        //         [MongoPipelineStages.PROJECT]: this._projectionQueryBuilder.buildProjectionStage(queryCopy, schema)
-        //     });
-        // }
-
         if (intersectionQuery.clientQuery["aggs"] != null) {
             const facetStage: any = {};
             
             for (let i = 0; i < queries.length; i++) {
-                facetStage[queries[i].definition] = [this._groupingQueryBuilder.buildGroupStage(queries[i].clientQuery["aggs"])];
+                const query: IQuery = queries[i];
+                const facet: any[] = [this._groupingQueryBuilder.buildGroupStage(query.clientQuery["aggs"])];
+                if (isPaginated !== undefined && isPaginated 
+                    && (query.queryStats.chunkToLoad < query.queryStats.expectedNumberOfRecords)) {
+                    this.applyPaging(facet, {
+                        skipNumber: query.queryStats.sumOfLoadedRecords,
+                        limitNumber: query.queryStats.chunkToLoad
+                    });
+                }
+                //console.log(">>>>>Query", JSON.stringify(facet, null, ""));
+                facetStage[queries[i].definition] = facet;
             }
 
             pipeline.push({
@@ -173,7 +174,7 @@ export class QueryBuilder {
             });
         }
 
-        //console.log(">>>>>>>Mongo", JSON.stringify(pipeline, null, ''));
+        //console.log(">>>>>>>MongoQuery", JSON.stringify(pipeline, null, ''));
         return pipeline;
     }
 
@@ -203,7 +204,7 @@ export class QueryBuilder {
         return pipeline;
     }
 
-    public applyPaging(pipeline: any[], pagingObject?: PagingObject): void {
+    private applyPaging(pipeline: any[], pagingObject?: PagingObject): void {
         if (pagingObject != null) {
             pipeline.push({
                 [MongoPipelineStages.SKIP]: pagingObject.skipNumber

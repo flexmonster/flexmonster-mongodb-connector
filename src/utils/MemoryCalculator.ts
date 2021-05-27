@@ -38,8 +38,12 @@ export class MemoryCalculator {
         let aggsArraySize = 0;
         if (typeof flatData.aggs !== "undefined") {
             aggsArraySize += 2 * MemoryConstants.REFERENCE; // reference to hidden classes for array 
-            aggsArraySize += 2 * MemoryConstants.REFERENCE + Object.keys(flatData.aggs[0]).length * MemoryConstants.REFERENCE; // refference to hidden class + references
-            aggsArraySize += 2 * MemoryConstants.REFERENCE + Object.keys(flatData.aggs[0]["value"]).length * (MemoryConstants.REFERENCE + MemoryConstants.NUMBER)
+            if (typeof flatData.aggs[0] !== "undefined") {
+                aggsArraySize += 2 * MemoryConstants.REFERENCE + Object.keys(flatData.aggs[0]).length * MemoryConstants.REFERENCE; // refference to hidden class + references
+                if (typeof flatData.aggs[0]["value"] !== "undefined") {
+                    aggsArraySize += 2 * MemoryConstants.REFERENCE + Object.keys(flatData.aggs[0]["value"]).length * (MemoryConstants.REFERENCE + MemoryConstants.NUMBER);
+                }
+            }
         }
 
         dataSize += fieldsArraySize + aggsArraySize;

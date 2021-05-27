@@ -14,6 +14,7 @@ export class FlatApiRequest extends AbstractApiRequest {
     
     protected buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema) {
         if (queryBuilder == null) throw new Error("Illegal argument exception");
+        //console.log(">>>>", JSON.stringify(this._splitedQueries));
 
         let mongoQuery: any = queryBuilder.buildFlatPipelineFacet(this._splitedQueries, schema);
 
@@ -44,9 +45,11 @@ export class FlatApiRequest extends AbstractApiRequest {
         const splitedQuery: IQuery[] = [];
 
         this._splitGrandTotalQuery(query, splitedQuery);//grandTotals part of the query
+        //console.log(">>>>", JSON.stringify(query));
 
         const dataRecords: any = JSON.parse(JSON.stringify(query));//data records part of the query
         delete dataRecords["aggs"];
+
         splitedQuery.push({
             clientQuery: dataRecords,
             definition: "dataRecords"

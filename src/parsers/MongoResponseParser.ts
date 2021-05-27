@@ -105,8 +105,8 @@ export class MongoResponseParser {
             parsedData.push(dataChunk);
             dataMemorySize += 4 * MemoryConstants.REFERENCE;
         });
-        console.log(">>>>>>>allTime", new Date().getTime() - startDate.getTime());
-        console.log(">>>>>>>>just parsing", new Date().getTime() - parseStart.getTime());
+        // console.log(">>>>>>>allTime", new Date().getTime() - startDate.getTime());
+        // console.log(">>>>>>>>just parsing", new Date().getTime() - parseStart.getTime());
         return {
             startDate: startDate,
             result: parsedData,
@@ -190,7 +190,7 @@ export class MongoResponseParser {
                                 values = this._parseValues(data[queryDefinition][j], {});     
                                 result.aggs.push({
                                     "keys": keys,
-                                    "values": values
+                                    "values": values.value
                                 });
                             }
                         }
@@ -199,13 +199,7 @@ export class MongoResponseParser {
 
                 result["fields"] = this.parseDrillThroughFields(fields);
                 flatDataMemorySize += MemoryCalculator.calculateFlatDataSize(result);
-
                 resolve(new FlatResultDataObject(result, flatDataMemorySize, startDate));
-                // if (!isGrandTotal) {
-                //     resolve(this.parseDrillThroughData(documents, fields));
-                // } else {
-                //     //resolve(this.parseAggregations(documents));
-                // }
             });
         });
     }

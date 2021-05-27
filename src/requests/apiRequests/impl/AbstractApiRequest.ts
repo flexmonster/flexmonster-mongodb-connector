@@ -42,7 +42,7 @@ export abstract class AbstractApiRequest implements IApiRequest{
 
         const startDate = new Date();
         const queryResultCursor: Promise<any> = this.executeQuery(queryExecutor, mongoQuery);
-        console.log(">>>>>>promise", new Date().getTime() - startDate.getTime());
+        //console.log(">>>>>>promise", new Date().getTime() - startDate.getTime());
         const data: any[] = await this.parseQueryResult(queryResultCursor, startDate);
 
         return data;

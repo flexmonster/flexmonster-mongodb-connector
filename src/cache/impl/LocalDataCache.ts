@@ -82,7 +82,7 @@ export class LocalDataCache implements IDataCache<string, any> {
     }
 
     private collectGabbage(): void {
-        console.log(">>>>>>", this.getCacheMemoryStatus());
+        //console.log(">>>>>>", this.getCacheMemoryStatus());
         const entries = this._cache.entries();
         let entriesList: GarbageColletingItemsInterface[] = [];
 
@@ -105,7 +105,7 @@ export class LocalDataCache implements IDataCache<string, any> {
         }
 
         entriesList = null;
-        console.log(">>>>>>", this.getCacheMemoryStatus());
+        //console.log(">>>>>>", this.getCacheMemoryStatus());
     }
 
     private garbageItemsComparator: (a: GarbageColletingItemsInterface, b: GarbageColletingItemsInterface) => number 

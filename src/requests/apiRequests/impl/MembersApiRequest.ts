@@ -20,13 +20,16 @@ export class MembersApiRequest extends AbstractApiRequest {
     };
 
     protected parseQueryResult = async (queryResult: Promise<any>, startDate: Date) => {
-        const parsedData = await MongoResponseParser.getInstance().parseMembersFromCursor(queryResult, this.requestArgument.fieldObject, this.CHUNK_SIZE, startDate);
+        const parsedData = await MongoResponseParser.getInstance().parseMembersFromCursor(queryResult, (<any>this.requestArgument.fieldObject)["field"], this.CHUNK_SIZE, startDate);
         this.storeMembersNumber(parsedData.getNumberOfItems(), this._schema);
         return parsedData;
     }
 
     private storeMembersNumber(numberOfMembers: number, schema: APISchema): void {
-        schema.fields.get(this.requestArgument.fieldObject.uniqueName).fieldStats.distinctMembersNumber = numberOfMembers;
+        const uniqueName: string = this.requestArgument.fieldObject["uniqueName"] !== undefined 
+            ? this.requestArgument.fieldObject["uniqueName"] 
+            : (<any>this.requestArgument.fieldObject)["field"]["uniqueName"]
+        schema.fields.get(uniqueName).fieldStats.distinctMembersNumber = numberOfMembers;
         return;
     }
 

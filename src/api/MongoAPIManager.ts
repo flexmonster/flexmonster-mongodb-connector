@@ -70,7 +70,7 @@ export class MongoAPIManager implements IDataAPI{
      * @param {number} page
      * @return {object}
      */
-    public async getMembers(dbo: Db, index: CollectionName, fieldObject: IRequestField, pagingObject: PagingInterface): Promise<any> {
+    public async getMembers(dbo: Db, index: CollectionName, fieldObject: any, pagingObject: PagingInterface): Promise<any> {
         // let apiRequest: IApiRequest = /*(pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
         //     ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
         //     :*/ new MembersApiRequest({index: index, fieldObject: fieldObject, clientQuery: {"members": fieldObject}, db: dbo}, this.getIndexSchema(dbo.databaseName, index))

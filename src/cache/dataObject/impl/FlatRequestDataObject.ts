@@ -26,6 +26,7 @@ export class FlatResultDataObject extends AbstractDataObject { //implements Data
         };
 
         if (this.data.aggs !== undefined) {
+            //console.log(">>>>>output", this.data.aggs);
             chunk.aggs = this.data.aggs;
         }
 

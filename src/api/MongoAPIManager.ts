@@ -4,17 +4,10 @@ import {MongoResponseParser} from '../parsers/MongoResponseParser';
 import {QueryBuilder} from '../query/builder/QueryBuilder';
 import {IDataAPI, CollectionName, PagingInterface} from './IDataAPI';
 import { APISchema } from '../schema/APISchema';
-import {IApiRequest} from "../requests/apiRequests/IApiRequest";
-import {MembersApiRequest} from "../requests/apiRequests/impl/MembersApiRequest";
-import { AggregationApiRequest } from '../requests/apiRequests/impl/AggregationApiRequest';
-import { DrillThroughApiRequest } from '../requests/apiRequests/impl/DrillThroughApiRequest';
-import { FlatApiRequest } from '../requests/apiRequests/impl/FlatApiRequest';
 import { DataManager } from '../cache/DataManager';
-import { IDataCache } from '../cache/IDataCache';
 import { ConfigInterface } from '../config/ConfigInterface';
 import { ConfigManager } from '../config/ConfigManager';
 import { LoggingManager } from '../logging/LoggingManager';
-import { IRequestField } from '../requests/apiRequests/IRequestArgument';
 import { RequestType } from '../requests/apiRequests/RequestType';
 
 export class MongoAPIManager implements IDataAPI{
@@ -74,7 +67,7 @@ export class MongoAPIManager implements IDataAPI{
         // let apiRequest: IApiRequest = /*(pagingObject.pageToken != null && this._dataLoader.isRequestRegistered(pagingObject.pageToken))
         //     ? this._dataLoader.getRegisteredRequest(pagingObject.pageToken) 
         //     :*/ new MembersApiRequest({index: index, fieldObject: fieldObject, clientQuery: {"members": fieldObject}, db: dbo}, this.getIndexSchema(dbo.databaseName, index))
-        return this._dataManager.getData({index: index, fieldObject: fieldObject, clientQuery: {"members": fieldObject}, db: dbo, schema: this.getIndexSchema(dbo.databaseName, index)}, 
+        return this._dataManager.getData({index: index, fieldObject: fieldObject["field"], clientQuery: {"members": fieldObject}, db: dbo, schema: this.getIndexSchema(dbo.databaseName, index)}, 
             RequestType.MEMBERS_REQUEST, pagingObject);
     }
 

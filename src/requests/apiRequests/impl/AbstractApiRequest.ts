@@ -14,7 +14,7 @@ export abstract class AbstractApiRequest implements IApiRequest{
     protected _curentQueryIndex: number;
     protected _currentPageIndex: number;
     protected _db: Db;
-    protected CHUNK_SIZE: number = 30000;
+    protected CHUNK_SIZE: number = 40000;
     protected _loggingTemplate: string;
     protected _schema: APISchema;
 

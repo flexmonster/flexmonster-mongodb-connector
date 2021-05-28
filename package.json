@@ -1,6 +1,6 @@
 {
     "name": "flexmonster-mongo-connector",
-    "version": "2.8.14",
+    "version": "2.9.0-beta.1",
     "description": "Custom data source API implementation for MongoDB",
     "main": "build/index.js",
     "types": "build/index.d.ts",
@@ -29,10 +29,10 @@
     ],
     "license": "MIT",
     "peerDependencies": {
-        "mongodb": "^3.6.5"
+        "mongodb": "^3.6.9"
     },
     "dependencies": {
-        "mongodb": "^3.6.5"
+        "mongodb": "^3.6.9"
     },
     "devDependencies": {
         "@types/mongodb": "^3.3.9",

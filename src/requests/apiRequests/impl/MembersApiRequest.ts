@@ -13,22 +13,23 @@ export class MembersApiRequest extends AbstractApiRequest {
     }
 
     protected buildMongoQuery(queryBuilder: QueryBuilder, schema: APISchema): any {
-        const mongoQuery: any = queryBuilder.buildMembersPipeline(this.requestArgument.fieldObject, schema);
+        const mongoQuery: any = queryBuilder.buildMembersPipeline({
+            "field": this.requestArgument.clientQuery.members["field"],
+            "filter": this.requestArgument.clientQuery.members["filter"]
+        }, schema);
         //queryBuilder.applyPaging(mongoQuery, {skipNumber: this._currentPageIndex, limitNumber: this.CHUNK_SIZE});
         //this._currentPageIndex += this.CHUNK_SIZE;
         return mongoQuery;
     };
 
     protected parseQueryResult = async (queryResult: Promise<any>, startDate: Date) => {
-        const parsedData = await MongoResponseParser.getInstance().parseMembersFromCursor(queryResult, (<any>this.requestArgument.fieldObject)["field"], this.CHUNK_SIZE, startDate);
+        const parsedData = await MongoResponseParser.getInstance().parseMembersFromCursor(queryResult, <any>this.requestArgument.fieldObject, this.CHUNK_SIZE, startDate);
         this.storeMembersNumber(parsedData.getNumberOfItems(), this._schema);
         return parsedData;
     }
 
     private storeMembersNumber(numberOfMembers: number, schema: APISchema): void {
-        const uniqueName: string = this.requestArgument.fieldObject["uniqueName"] !== undefined 
-            ? this.requestArgument.fieldObject["uniqueName"] 
-            : (<any>this.requestArgument.fieldObject)["field"]["uniqueName"]
+        const uniqueName: string = this.requestArgument.fieldObject["uniqueName"];
         schema.fields.get(uniqueName).fieldStats.distinctMembersNumber = numberOfMembers;
         return;
     }

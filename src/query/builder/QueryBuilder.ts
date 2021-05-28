@@ -181,11 +181,11 @@ export class QueryBuilder {
         return pipeline;
     }
 
-    public buildMembersPipeline(field: any, schema: APISchema): any[] {
+    public buildMembersPipeline(fieldObject: any, schema: APISchema): any[] {
         let query: any = {
             "aggs": {
                 "by": {
-                    "rows": [field.field]
+                    "rows": [fieldObject.field]
                 }
             }
         };
@@ -196,8 +196,8 @@ export class QueryBuilder {
         //         [field.uniqueName]: 1
         //     }
         // });
-        if (field["filter"] !== undefined) {
-            query["filter"] = field["filter"];
+        if (fieldObject["filter"] !== undefined) {
+            query["filter"] = fieldObject["filter"];
             pipeline.push({
                 [MongoPipelineStages.MATCH]: this._filterQueryBuilder.buildFilterQuery(query["filter"], schema)
             });

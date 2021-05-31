@@ -14,6 +14,7 @@ export class SchemaValueObject {
     public caption = "";
     public folder: string;
     public aggregations: string[];
+    public fieldStats: FieldStats;
 
     constructor(uniqueName: string, type: string, caption: string, folder: string = "", aggregations: string[] = []) {
         this.uniqueName = uniqueName;
@@ -21,6 +22,7 @@ export class SchemaValueObject {
         this.caption = caption;
         this.folder = folder;
         this.aggregations = aggregations;
+        this.fieldStats = {};
     }
 
     public static fromObject(obj: any) {
@@ -62,4 +64,8 @@ export class SchemaValueObject {
         return resultObject;
     }
 
+}
+
+export interface FieldStats {
+    distinctMembersNumber?: number;
 }

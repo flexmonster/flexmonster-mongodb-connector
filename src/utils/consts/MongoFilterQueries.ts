@@ -1,4 +1,4 @@
-export class MongoQueries {
+export class MongoFilterQueries {
     
     public static REGEXP: string = "$regex";
     public static EQUAL: string = "$eq";
@@ -9,4 +9,6 @@ export class MongoQueries {
     public static LESS_EQUAL: string = "$lte";
     public static INCLUDE: string = "$in";
     public static EXCLUDE: string = "$nin";
+    public static AND: string = "$and";
+    public static OR: string = "$or";
 }

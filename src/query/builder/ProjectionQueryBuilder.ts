@@ -13,7 +13,7 @@ export class ProjectionQueryBuilder {
         let aggregationQuery = query["aggs"];
         let filterQuery = query["filter"];
         let projection: any = {};
-        if (aggregationQuery["values"] != null) {
+        if (aggregationQuery !== undefined && aggregationQuery["values"] !== undefined) {
             let fieldValueObject: IRequestField = null;
             for (let i = 0; i < aggregationQuery["values"].length; i++) {
                 fieldValueObject = aggregationQuery["values"][i]["field"];
@@ -24,7 +24,7 @@ export class ProjectionQueryBuilder {
                 }
             }
         }
-        if (aggregationQuery["by"]) {
+        if (aggregationQuery !== undefined && aggregationQuery["by"] !== undefined) {
             this._buildProjectionFromRowsColumns(aggregationQuery["by"]["rows"], schema, projection);
             this._buildProjectionFromRowsColumns(aggregationQuery["by"]["cols"], schema, projection);
         }
@@ -50,7 +50,7 @@ export class ProjectionQueryBuilder {
         }
     }
 
-    private _buildProjectionFromRowsColumns(rowsColumns: any, schema: APISchema, projectionQuery: any) {
+    private _buildProjectionFromRowsColumns(rowsColumns: any[], schema: APISchema, projectionQuery: any) {
         if (rowsColumns == null) return;
         let fieldReference = null;
         let fieldObject: IRequestField = null;

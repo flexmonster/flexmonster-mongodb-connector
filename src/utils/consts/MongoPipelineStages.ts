@@ -7,5 +7,6 @@ export class MongoPipelineStages {
     public static SKIP: string = "$skip";
     public static LIMIT: string = "$limit";
     public static SORT: string = "$sort";
+    public static FACET: string = "$facet";
 
 }

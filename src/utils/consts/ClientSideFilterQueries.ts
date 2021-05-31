@@ -20,5 +20,8 @@ export class ClientSideFilterQueries {
     public static LESS_EQUAL: string = "less_equal";
     public static INCLUDE: string = "include";
     public static EXCLUDE: string = "exclude";
+    //logic operators
+    public static AND: string = "and";
+    public static OR: string = "or";
 
 }

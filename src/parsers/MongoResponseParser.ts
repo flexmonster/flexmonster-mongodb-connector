@@ -309,9 +309,9 @@ export class MongoResponseParser {
             memorySize += MemoryConstants.NUMBER;
         } else if (value != null && value["_bsontype"] != null) {
             resultValue = value.toString();
-            memorySize += resultValue.length * MemoryConstants.CHARACTER;
+            memorySize += resultValue == null ? MemoryConstants.REFERENCE : resultValue.length * MemoryConstants.CHARACTER;
         } else {
-            memorySize += resultValue.length === undefined ? MemoryConstants.NUMBER : resultValue.length * MemoryConstants.CHARACTER;
+            memorySize += resultValue == null ? MemoryConstants.REFERENCE : (resultValue.length === undefined ? MemoryConstants.NUMBER : resultValue.length * MemoryConstants.CHARACTER);
         }
         //console.log(">>>>>>>>", memorySize, MemoryCalculator.roundTo8bytes(memorySize));
         return {

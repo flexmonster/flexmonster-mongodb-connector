@@ -1,3 +1,4 @@
+import hasher = require('object-hash');
 import { QueryBuilder } from "../query/builder/QueryBuilder";
 import { MongoQueryExecutor } from "../query/MongoQueryExecutor";
 import { LocalDataCache } from "./impl/LocalDataCache";
@@ -75,13 +76,17 @@ export class DataManager {
     }
 
     private async _getData(apiRequest: IApiRequest): Promise<AbstractDataObject> {
-        let query: string = JSON.stringify(apiRequest.requestArgument.clientQuery);
-        let data: AbstractDataObject = this.getDataFromCache(query);
+        const requestArgumentHash = hasher({
+            databaseName: apiRequest.requestArgument.db.databaseName,
+            index: apiRequest.requestArgument.index,
+            clientQuery: apiRequest.requestArgument.clientQuery
+        })
+        let data: AbstractDataObject = this.getDataFromCache(requestArgumentHash);
         LoggingManager.log(`Client query: ${JSON.stringify(apiRequest.requestArgument.clientQuery)}`);
 
         if (data === undefined) {
             data = await apiRequest.getData(this._queryBuilder, this._queryExecutor);
-            this.setDataToCache(query, <AbstractDataObject>data);
+            this.setDataToCache(requestArgumentHash, <AbstractDataObject>data);
 
             if (ConfigManager.getInstance().currentConfig.cacheEnabled) {
                 LoggingManager.log(`Putting ${apiRequest.loggingTemplate} data to cache`);

@@ -1,4 +1,3 @@
-import hasher = require('object-hash');
 import { QueryBuilder } from "../query/builder/QueryBuilder";
 import { MongoQueryExecutor } from "../query/MongoQueryExecutor";
 import { LocalDataCache } from "./impl/LocalDataCache";
@@ -20,6 +19,7 @@ import { IRequestArgument } from "../requests/apiRequests/IRequestArgument";
 import { RequestFactory } from "../requests/requestsFactory.ts/RequestsFactory";
 import { ArrayDataObject } from "./dataObject/impl/ArrayDataObject";
 import { SimpleNumericIterator } from "./customIterators/SimpleNumericIterator";
+import { HashGenerator } from "../utils/HashGenerator";
 //import { CachedDataInterface } from "./dataObject/CachedDataInterface";
 //import { AbstractDataObject } from "./dataObject/impl/AbstractDataObject";
 
@@ -27,7 +27,7 @@ export class DataManager {
 
     private _queryBuilder: QueryBuilder;
     private _queryExecutor: MongoQueryExecutor;
-    private _cacheManager: IDataCache<string, any>;
+    private _cacheManager: IDataCache<CacheKeyInterface, any>;
     private isProbabilisticCacheFlushEnabled: boolean = true;
     private _requestsRegister: Register<string, DataIterationInterface>;
     //private readonly CHUNK_SIZE: number = 50000;
@@ -76,17 +76,17 @@ export class DataManager {
     }
 
     private async _getData(apiRequest: IApiRequest): Promise<AbstractDataObject> {
-        const requestArgumentHash = hasher({
+        const cacheKey: CacheKeyInterface = {
             databaseName: apiRequest.requestArgument.db.databaseName,
             index: apiRequest.requestArgument.index,
             clientQuery: apiRequest.requestArgument.clientQuery
-        })
-        let data: AbstractDataObject = this.getDataFromCache(requestArgumentHash);
+        };
+        let data: AbstractDataObject = this.getDataFromCache(cacheKey);
         LoggingManager.log(`Client query: ${JSON.stringify(apiRequest.requestArgument.clientQuery)}`);
 
         if (data === undefined) {
             data = await apiRequest.getData(this._queryBuilder, this._queryExecutor);
-            this.setDataToCache(requestArgumentHash, <AbstractDataObject>data);
+            this.setDataToCache(cacheKey, <AbstractDataObject>data);
 
             if (ConfigManager.getInstance().currentConfig.cacheEnabled) {
                 LoggingManager.log(`Putting ${apiRequest.loggingTemplate} data to cache`);
@@ -99,14 +99,14 @@ export class DataManager {
         return data;
     }
 
-    private getDataFromCache(queryString: string): AbstractDataObject {
+    private getDataFromCache(keyObject: CacheKeyInterface): AbstractDataObject {
         if (this._cacheManager === null) return undefined;
-        return this._cacheManager.getCache(queryString); 
+        return this._cacheManager.getCache(keyObject); 
     }
 
-    private setDataToCache(queryString: string, data: AbstractDataObject): void {
+    private setDataToCache(keyObject: CacheKeyInterface, data: AbstractDataObject): void {
         if (this._cacheManager === null) return undefined;
-        this._cacheManager.setCache(queryString, data);
+        this._cacheManager.setCache(keyObject, data);
     }
 
     private getCacheMemoryStatus(): string {
@@ -127,6 +127,17 @@ export class DataManager {
         }
         return dataInstance.getChunk(iterator);
     }
+
+    // private getCacheKey(objectKey: CacheKeyInterface): string {
+    //     if (objectKey == null) throw new Error("Null cache object key exception");
+    //     return HashGenerator.createHashFromObject(objectKey);
+    // }
+}
+
+export interface CacheKeyInterface {
+    clientQuery: string,
+    databaseName: string,
+    index: string    
 }
 
 export interface DataIterationInterface {

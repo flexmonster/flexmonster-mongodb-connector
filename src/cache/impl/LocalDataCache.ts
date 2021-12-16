@@ -3,8 +3,10 @@ import { ICacheStrategie } from "../cacheStrategies/ICacheStrategie";
 import { ConfigInterface } from "../../config/ConfigInterface";
 import { AbstractDataObject } from "../dataObject/impl/AbstractDataObject";
 import { DataRetrievalInterface } from "../dataObject/DataRetrievalInterface";
+import { CacheKeyInterface } from "../DataManager";
+import { HashGenerator } from "../../utils/HashGenerator";
 
-export class LocalDataCache implements IDataCache<string, any> {
+export class LocalDataCache implements IDataCache<CacheKeyInterface, any> {
 
     private _cache: Map<string, CachedDataObject> = null;
     private timeToLive: number = 0; //TTL for data objects in minutes, default 0 means we are not going to update cache
@@ -26,14 +28,15 @@ export class LocalDataCache implements IDataCache<string, any> {
         this.timeToLive = minutes;
     }
 
-    public hasKey(key: string): boolean {
-        if (key == null) throw new Error("Null key exception");
-        return this._cache.has(key);
-    }
+    // public hasKey(key: CacheKeyInterface): boolean {
+    //     if (key == null) throw new Error("Null key exception");
+    //     return this._cache.has(key);
+    // }
 
-    public getCache(key: string): DataRetrievalInterface {
+    public getCache(key: CacheKeyInterface): DataRetrievalInterface {
         if (key == null) throw new Error("Null key exception");
-        let cachedDataObject: CachedDataObject = this._cache.get(key);
+        const keyHash: string = this.getCacheKey(key);
+        let cachedDataObject: CachedDataObject = this._cache.get(keyHash);
         
         if (typeof cachedDataObject !== "undefined" && this._cacheStrategie.isCacheStaled(cachedDataObject, this.timeToLive)) {
             // console.log(">>>>>stalled", ((new Date().getTime() - cachedDataObject.timeStamp) / (1000 * 60)));
@@ -56,19 +59,26 @@ export class LocalDataCache implements IDataCache<string, any> {
     //         > cachedDataObject.timeStamp + this.timeToLive * 1000;
     // }
 
-    private removeFromCache(key: string): void {
+    private removeFromCache(key: CacheKeyInterface): void {
         if (key == null) throw new Error("Null key exception");
-        const cachedItem: CachedDataObject = this._cache.get(key);
+        const keyHash: string = this.getCacheKey(key);
+        const cachedItem: CachedDataObject = this._cache.get(keyHash);
         if (typeof cachedItem === "undefined") return;
 
-        this._cache.delete(key);
+        this._removeFromCache(keyHash);
         this._currentCacheSize-= cachedItem.dataMemorySize;
         cachedItem.data = null;
         return;
     }
 
-    public setCache(key: string, data: AbstractDataObject): void {
-        this._cache.set(key, 
+    private _removeFromCache(keyHash: string): void {
+        this._cache.delete(keyHash);
+    }
+
+
+    public setCache(key: CacheKeyInterface, data: AbstractDataObject): void {
+        const keyHash: string = this.getCacheKey(key);
+        this._cache.set(keyHash, 
             {
                 data: data,
                 timeStamp: new Date().getTime(),
@@ -101,7 +111,7 @@ export class LocalDataCache implements IDataCache<string, any> {
         let garbageCollectingItem: GarbageColletingItemsInterface = null;
         while (this._cacheSizeLimit * this._garbageCollectingCoefficient <= this._currentCacheSize) {
             garbageCollectingItem = entriesList.shift();
-            this.removeFromCache(garbageCollectingItem.key);
+            this._removeFromCache(garbageCollectingItem.key);
         }
 
         entriesList = null;
@@ -130,6 +140,11 @@ export class LocalDataCache implements IDataCache<string, any> {
     public clearCache(): void {
         this._cache.clear();
         this._currentCacheSize = 0;
+    }
+
+    private getCacheKey(objectKey: CacheKeyInterface): string {
+        if (objectKey == null) throw new Error("Null cache object key exception");
+        return HashGenerator.createHashFromObject(objectKey);
     }
 
     public getCacheMemoryStatus(): string {

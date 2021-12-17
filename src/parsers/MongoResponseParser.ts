@@ -3,12 +3,12 @@ import {Delimeter} from '../utils/consts/Delimeters';
 import {APISchema} from '../schema/APISchema';
 import {IRequestField} from '../requests/apiRequests/IRequestArgument';
 import {MongoFieldType} from '../utils/consts/MongoFieldType';
-import { Cursor } from 'mongodb';
 import { IQuery } from '../query/IQuery';
 import { ArrayDataObject } from '../cache/dataObject/impl/ArrayDataObject';
 import { FlatResultDataObject } from '../cache/dataObject/impl/FlatRequestDataObject';
 import { MemoryCalculator, MemoryConstants } from '../utils/MemoryCalculator';
 import { AggregationApiRequest } from '../requests/apiRequests/impl/AggregationApiRequest';
+import { AggregationCursor } from 'mongodb';
 
 export class MongoResponseParser {
 
@@ -62,14 +62,14 @@ export class MongoResponseParser {
     public parseCalculationsFromCursor(cursor: Promise<any>, query: IQuery[], dataChunkSize: number, startDate: Date = null,
         aggregationApiRequest: AggregationApiRequest): Promise<ArrayDataObject> {
         return new Promise((resolve, reject) => {
-            cursor.then(async (documents: Cursor) => {
+            cursor.then(async (documents: AggregationCursor) => {
                 const parsingResult = await this.parseAggregations(documents, query, dataChunkSize, startDate, aggregationApiRequest);
                 resolve(new ArrayDataObject(parsingResult.result, parsingResult.startDate, parsingResult.memorySize));
             });
         });
     }
 
-    private async parseAggregations(documents: Cursor, queries: IQuery[], dataChunkSize: number, startDate: Date = null, 
+    private async parseAggregations(documents: AggregationCursor, queries: IQuery[], dataChunkSize: number, startDate: Date = null, 
         aggregationApiRequest: AggregationApiRequest): Promise<any> {
 
         let parsedData: any[] = [];
@@ -227,7 +227,7 @@ export class MongoResponseParser {
         });
     }
 
-    private async parseDrillThroughData(documents: Cursor, fields: IRequestField[], dataChunkSize: number): Promise<any> {
+    private async parseDrillThroughData(documents: AggregationCursor, fields: IRequestField[], dataChunkSize: number): Promise<any> {
         const result: any = {
             "fields": [],
             "hits": []

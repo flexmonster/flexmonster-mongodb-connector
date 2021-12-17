@@ -29,12 +29,13 @@
     ],
     "license": "MIT",
     "peerDependencies": {
-        "mongodb": "^4.1.4"
+        "mongodb": "^3.7.3"
     },
     "dependencies": {
-        "mongodb": "^4.1.4"
+        "mongodb": "^3.7.3"
     },
     "devDependencies": {
+        "@types/mongodb": "^3.6.20",
         "@types/node": "^12.12.6",
         "ts-node": "^8.4.1",
         "typescript": "^3.7.2"

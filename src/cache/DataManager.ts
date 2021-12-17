@@ -135,7 +135,7 @@ export class DataManager {
 }
 
 export interface CacheKeyInterface {
-    clientQuery: string,
+    clientQuery: object,
     databaseName: string,
     index: string    
 }

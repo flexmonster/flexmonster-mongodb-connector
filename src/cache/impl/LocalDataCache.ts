@@ -144,7 +144,8 @@ export class LocalDataCache implements IDataCache<CacheKeyInterface, any> {
 
     private getCacheKey(objectKey: CacheKeyInterface): string {
         if (objectKey == null) throw new Error("Null cache object key exception");
-        return HashGenerator.createHashFromObject(objectKey);
+        const objectKeyString: string = JSON.stringify(objectKey.clientQuery) + objectKey.databaseName + objectKey.index;
+        return HashGenerator.createHashFromString(objectKeyString);
     }
 
     public getCacheMemoryStatus(): string {

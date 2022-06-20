@@ -55,11 +55,12 @@ export class ProjectionQueryBuilder {
         let fieldReference = null;
         let fieldObject: IRequestField = null;
         for (let i = 0; i < rowsColumns.length; i++) {
-            fieldObject = rowsColumns[i]
+            fieldObject = rowsColumns[i];
             fieldReference = "$" + fieldObject.uniqueName;
-            if (schema.fields.get(fieldObject.uniqueName).type == ClientSideFieldType.DATE) {
+            const schemaValueObject = schema.fields.get(fieldObject.uniqueName);
+            if (schemaValueObject?.type == ClientSideFieldType.DATE) {
                 this._buildProjectionForDateField(rowsColumns[i], projectionQuery);
-            } else {
+            } else if (schemaValueObject) {
                 projectionQuery[fieldObject.uniqueName] = fieldReference;
             }
         }

@@ -26,8 +26,7 @@ export class FilterQueryBuilder {
     private _buildClassicFilter(queryList: any, schema: APISchema, filterQuery: any) {
         for (let i = 0; i < queryList.length; i++) {
             const field: IRequestField = queryList[i]["field"];
-            filterQuery[field.uniqueName] = this._filterField(queryList[i], schema);
-
+            filterQuery[field.uniqueName] = this._filterField(queryList[i], schema)[field.uniqueName];
         }
         return;
     }

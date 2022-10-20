@@ -29,10 +29,10 @@
     ],
     "license": "MIT",
     "peerDependencies": {
-        "mongodb": "^4.1.4"
+        "mongodb": "^4.4.0"
     },
     "dependencies": {
-        "mongodb": "^4.1.4"
+        "mongodb": "^4.4.0"
     },
     "devDependencies": {
         "@types/node": "^12.12.6",

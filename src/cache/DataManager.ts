@@ -46,6 +46,8 @@ export class DataManager {
 
         if (currentPage.pageToken != null) {
             const registerItem = this._requestsRegister.deleteItem(currentPage.pageToken);
+            if (registerItem == undefined) throw new Error("The data has been updated. Please refresh the page.");
+
             const retrievalResult: RetrievalResult = await this.getDataChunk(registerItem.data, registerItem.iterator); //registerItem.data.getChunk(registerItem.iterator);
             let nextPageToken: string = null;
 

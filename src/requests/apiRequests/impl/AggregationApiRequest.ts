@@ -10,7 +10,7 @@ import { ArrayDataObject } from "../../../cache/dataObject/impl/ArrayDataObject"
 
 export class AggregationApiRequest extends AbstractApiRequest {
 
-    private readonly GROUPING_LIMITATION: number = 125000; //the limit for MongoDB 1 time response, to avoid 16 MB document limitation
+    private readonly GROUPING_LIMITATION: number = 100000; //the limit for MongoDB 1 time response, to avoid 16 MB document limitation
     private _isPaginationEnabled: boolean = false;
     private _templateQuery: IQuery = null;
     private _isFinished: boolean = false;

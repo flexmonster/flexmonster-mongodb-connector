@@ -30,7 +30,7 @@ See our [sample project with the MongoDB Connector](https://github.com/flexmonst
 
 ## License
 
-Here is the [Flexmonster licensing page](https://www.flexmonster.com/pivot-table-editions-and-pricing?r=mongo_connect). We have a free 30-day trial! 
+Here is the [Flexmonster licensing page](https://www.flexmonster.com/pivot-table-editions-and-pricing?r=mongo_connect). We have a 30-day free trial! 
 
 Flexmonster MongoDB Connector is released as an MIT-licensed (free and open-source) add-on to Flexmonster Pivot.
 

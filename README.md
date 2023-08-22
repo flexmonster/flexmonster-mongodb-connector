@@ -9,7 +9,7 @@ Flexmonster Pivot is a powerful JavaScript tool for interactive web reporting. I
 
 This package is a Flexmonster Connector for [MongoDB](https://www.mongodb.com/) applications.
 
-[Flexmonster MongoDB Connector](https://www.flexmonster.com/doc/introduction-to-the-flexmonster-mongodb-connector?r=mongo_connect) is a special server-side tool intended to help you retrieve the data from a MongoDB database to Flexmonster Pivot. It has to be embedded into a server that accepts requests for the data from Flexmonster and passes them to the Connector.
+[Flexmonster MongoDB Connector](https://www.flexmonster.com/doc/introduction-to-the-flexmonster-mongodb-connector?r=mongo_connect) is a server-side tool that helps you retrieve the data from a MongoDB database to Flexmonster Pivot. The Connector has to be embedded into a server.
 
 Table of contents:
 

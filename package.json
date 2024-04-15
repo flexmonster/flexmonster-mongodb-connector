@@ -1,6 +1,6 @@
 {
     "name": "flexmonster-mongo-connector",
-    "version": "2.9.74",
+    "version": "2.9.75",
     "description": "Custom data source API implementation for MongoDB",
     "main": "build/index.js",
     "types": "build/index.d.ts",

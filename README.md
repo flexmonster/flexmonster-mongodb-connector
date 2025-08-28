@@ -5,7 +5,7 @@ Website: [www.flexmonster.com](https://www.flexmonster.com?r=mongo_connect)
 
 ## Flexmonster Pivot Table & Charts
 
-Flexmonster Pivot is a powerful JavaScript tool for interactive web reporting. It allows you to visualize and analyze data from JSON, CSV, SQL, NoSQL, Elasticsearch, and OLAP data sources quickly and conveniently. Flexmonster is designed to integrate seamlessly with any client-side framework and can be easily embedded into your application.
+Flexmonster Pivot Table & Charts is a powerful and fully customizable JavaScript component for web reporting. It is packed with all core features for data analysis and can easily become a part of your data visualization project. The tool supports popular frameworks like React, Vue, Angular, Blazor, and [more](https://www.flexmonster.com/doc/available-tutorials-integration?r=mongo_connect). Also, Flexmonster connects to [any data source](https://www.flexmonster.com/doc/supported-data-sources?r=mongo_connect), including SQL and NoSQL databases, JSON and CSV files, OLAP cubes, and Elasticsearch.
 
 This package is a Flexmonster Connector for [MongoDB](https://www.mongodb.com/) applications.
 
@@ -15,8 +15,9 @@ Table of contents:
 
 - [Usage](#usage)
 - [Sample project](#sample-project)
-- [License](#license)
 - [Support and feedback](#support-and-feedback)
+- [Flexmonster licensing](#flexmonster-licensing)
+- [Social media](#social-media)
 
 ## Usage
 
@@ -24,16 +25,25 @@ Refer to [our documentation](https://www.flexmonster.com/doc/mongodb-connector?r
 
 To learn about the Connector API, have a look at the following section: [MongoDB Connector API](https://www.flexmonster.com/api/all-methods?r=mongo_connect).
 
-## <a name="sample-project"></a>Sample project ##
+## Sample project
 
-See our [sample project with the MongoDB Connector](https://github.com/flexmonster/pivot-mongo).
-
-## License
-
-Here is the [Flexmonster licensing page](https://www.flexmonster.com/pivot-table-editions-and-pricing?r=mongo_connect). We have a 30-day free trial! 
-
-Flexmonster MongoDB Connector is released as an MIT-licensed (free and open-source) add-on to Flexmonster Pivot.
+If you look for some reference examples, our team prepared a ready-to-use [sample project with the MongoDB Connector](https://github.com/flexmonster/pivot-mongo).
 
 ## Support and feedback
 
-Please share your feedback or ask questions via [Flexmonster Help Center](https://www.flexmonster.com/help-center?r=mongo_connect).
+In case of any issues, visit our [Troubleshooting](https://www.flexmonster.com/doc/typical-errors?r=mongo_connect) section. You can also search among the [resolved cases](https://www.flexmonster.com/technical-support?r=mongo_connect) for a solution to your issue.
+
+To share your feedback or ask questions, contact our Tech team by raising a ticket on our [Help Center](https://www.flexmonster.com/help-center?r=mongo_connect). You can also find a list of samples, technical specifications, and a user interface guide there.
+
+## Flexmonster licensing
+
+To learn about Flexmonster Pivot licenses, visit the [Flexmonster licensing page](https://www.flexmonster.com/pivot-table-editions-and-pricing?r=mongo_connect). 
+If you want to test our product, we provide a 30-day free trial.
+
+If you need any help with your license, fill out our [Contact form](https://www.flexmonster.com/contact-our-team?r=mongo_connect), and we will get in touch with you.
+
+## Social media
+
+Follow us on social media and stay updated on our development process!
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/company/flexmonster) [![YouTube](https://img.shields.io/badge/YouTube-red?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/user/FlexMonsterPivot) [![Twitter](https://img.shields.io/badge/Twitter-blue?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/flexmonster)

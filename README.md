@@ -9,7 +9,7 @@ Flexmonster Pivot Table & Charts is a powerful and fully customizable JavaScript
 
 This package is a Flexmonster Connector for [MongoDB](https://www.mongodb.com/) applications.
 
-[Flexmonster MongoDB Connector](https://www.flexmonster.com/doc/introduction-to-the-flexmonster-mongodb-connector?r=mongo_connect) is a server-side tool that helps you retrieve the data from a MongoDB database to Flexmonster Pivot. The Connector has to be embedded into a server.
+[Flexmonster MongoDB Connector](https://www.flexmonster.com/doc/introduction-to-the-flexmonster-mongodb-connector?r=mongo_connect) is a server-side tool that helps you retrieve the data from a MongoDB database to Flexmonster Pivot. The Connector has to be embedded into a Node.js server.
 
 Table of contents:
 

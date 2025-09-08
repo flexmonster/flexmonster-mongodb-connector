@@ -21,7 +21,7 @@ Table of contents:
 
 ## Usage
 
-Refer to [our documentation](https://www.flexmonster.com/doc/mongodb-connector?r=mongo_connect) for details on Flexmonster MongoDB Connector usage.
+Refer to [our documentation](https://www.flexmonster.com/doc/mongodb-connector?r=mongo_connect) for details on Flexmonster MongoDB Connector usage. Note that the Connector is compatible only with [MongoDB driver](https://www.npmjs.com/package/mongodb/v/4.17.2) version 4.17.2 or earlier.
 
 To learn about the Connector API, have a look at the following section: [MongoDB Connector API](https://www.flexmonster.com/api/all-methods?r=mongo_connect).
 

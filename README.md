@@ -3,6 +3,10 @@
 [![Flexmonster Pivot Table & Charts](https://cdn.flexmonster.com/landing.png)](https://www.flexmonster.com?r=mongo_connect)
 Website: [www.flexmonster.com](https://www.flexmonster.com?r=mongo_connect)
 
+[![NPM](https://img.shields.io/npm/v/flexmonster-mongo-connector)](https://www.npmjs.com/package/flexmonster-mongo-connector)
+[![Github Stars](https://img.shields.io/github/stars/flexmonster?style=social)](https://github.com/flexmonster) [![Twitter](https://img.shields.io/twitter/follow/Flexmonster?style=social)](https://twitter.com/Flexmonster)
+
+
 ## Flexmonster Pivot Table & Charts
 
 Flexmonster Pivot Table & Charts is a powerful and fully customizable JavaScript component for web reporting. It is packed with all core features for data analysis and can easily become a part of your data visualization project. The tool supports popular frameworks like React, Vue, Angular, Blazor, and [more](https://www.flexmonster.com/doc/available-tutorials-integration?r=mongo_connect). Also, Flexmonster connects to [any data source](https://www.flexmonster.com/doc/supported-data-sources?r=mongo_connect), including SQL and NoSQL databases, JSON and CSV files, OLAP cubes, and Elasticsearch.

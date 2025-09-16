@@ -11,7 +11,7 @@
         "name": "Flexmonater"
     },
     "bugs": {
-        "url": "https://flexmonster.com/forum/"
+        "url": "https://flexmonster.com/technical-support/"
     },
     "homepage": "https://flexmonster.com",
     "keywords": [
@@ -27,7 +27,7 @@
         "flexmonster",
         "typescript"
     ],
-    "license": "MIT",
+    "license": "https://flexmonster.com/technical-support/",
     "peerDependencies": {
         "mongodb": "^4.17.0"
     },

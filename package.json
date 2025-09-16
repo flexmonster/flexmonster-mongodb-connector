@@ -1,14 +1,15 @@
 {
     "name": "flexmonster-mongo-connector",
     "version": "2.9.112",
-    "description": "Custom data source API implementation for MongoDB",
+    "description": "MongoDB connector for Flexmonster Pivot Table & Charts",
     "main": "build/index.js",
     "types": "build/index.d.ts",
     "scripts": {
         "build": "tsc"
     },
     "author": {
-        "name": "Flexmonater"
+        "name": "Flexmonater",
+        "email": "help@flexmonster.com"
     },
     "bugs": {
         "url": "https://flexmonster.com/technical-support/"

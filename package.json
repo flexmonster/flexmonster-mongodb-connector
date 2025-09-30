@@ -28,7 +28,7 @@
         "flexmonster",
         "typescript"
     ],
-    "license": "https://flexmonster.com/technical-support/",
+    "license": "https://www.flexmonster.com/software-license-agreement/",
     "peerDependencies": {
         "mongodb": "^4.17.0"
     },

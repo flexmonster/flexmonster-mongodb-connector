@@ -1,6 +1,6 @@
 {
     "name": "flexmonster-mongo-connector",
-    "version": "2.9.135",
+    "version": "2.9.136",
     "description": "MongoDB connector for Flexmonster Pivot Table and Charts",
     "main": "build/index.js",
     "types": "build/index.d.ts",
